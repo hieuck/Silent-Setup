@@ -31,6 +31,8 @@ namespace SilentSetup.Models
         public int? SizeMb { get; set; }
         public string? Checksum { get; set; }
         public List<string>? Mirrors { get; set; }
+        public string? Username { get; set; }
+        public string? Password { get; set; }
     }
 
     public class InstallConfig
@@ -40,6 +42,7 @@ namespace SilentSetup.Models
         public string? InstallDir { get; set; }
         public int Timeout { get; set; } = 600;
         public bool RequireAdmin { get; set; } = true;
+        public string? Password { get; set; } // For zip extraction or installer password
     }
 
     public class DetectionConfig

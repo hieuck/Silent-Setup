@@ -78,7 +78,7 @@ namespace SilentSetup.Services
 
                 // Download from URL
                 var downloadUrl = app.Download.Url;
-                var downloaded = await DownloadFile(downloadUrl, cachedPath, progress);
+                var downloaded = await DownloadFile(downloadUrl, cachedPath, progress, app.Download.Username, app.Download.Password);
 
                 if (!downloaded)
                 {
@@ -89,7 +89,7 @@ namespace SilentSetup.Services
                         foreach (var mirror in app.Download.Mirrors)
                         {
                             _logger.Info($"Trying mirror: {mirror}");
-                            downloaded = await DownloadFile(mirror, cachedPath, progress);
+                            downloaded = await DownloadFile(mirror, cachedPath, progress, app.Download.Username, app.Download.Password);
                             if (downloaded)
                             {
                                 downloadUrl = mirror;
@@ -150,11 +150,20 @@ namespace SilentSetup.Services
             }
         }
 
-        private async Task<bool> DownloadFile(string url, string outputPath, IProgress<int>? progress)
+        private async Task<bool> DownloadFile(string url, string outputPath, IProgress<int>? progress, string? username = null, string? password = null)
         {
             try
             {
-                using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+                // Add basic authentication if credentials provided
+                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                {
+                    var authValue = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{username}:{password}"));
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
+                }
+
+                using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 var totalBytes = response.Content.Headers.ContentLength ?? 0;

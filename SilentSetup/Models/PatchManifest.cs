@@ -68,6 +68,7 @@ namespace SilentSetup.Models
         public string File { get; set; } = string.Empty;
         public string ExtractTo { get; set; } = string.Empty;
         public bool Overwrite { get; set; } = true;
+        public string? Password { get; set; }
         public List<string>? Include { get; set; }
         public List<string>? Exclude { get; set; }
     }

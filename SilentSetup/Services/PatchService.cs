@@ -347,7 +347,16 @@ namespace SilentSetup.Services
 
                 await Task.Run(() =>
                 {
-                    ZipFile.ExtractToDirectory(archivePath, extractTo, overwriteFiles: patch.Archive.Overwrite);
+                    if (!string.IsNullOrWhiteSpace(patch.Archive.Password))
+                    {
+                        // Password-protected archive extraction requires third-party library
+                        _logger.Warn("Password-protected archive requires SharpZipLib package");
+                        throw new NotSupportedException("Password-protected archive extraction not yet implemented. Use SharpZipLib for password support.");
+                    }
+                    else
+                    {
+                        ZipFile.ExtractToDirectory(archivePath, extractTo, overwriteFiles: patch.Archive.Overwrite);
+                    }
                 });
 
                 return new PatchResult

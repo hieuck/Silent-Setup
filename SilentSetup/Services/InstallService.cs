@@ -249,7 +249,16 @@ namespace SilentSetup.Services
 
                 await Task.Run(() =>
                 {
-                    ZipFile.ExtractToDirectory(installerPath, targetDir, overwriteFiles: true);
+                    if (!string.IsNullOrWhiteSpace(app.Install.Password))
+                    {
+                        // Password-protected ZIP extraction requires third-party library
+                        _logger.Warn("Password-protected ZIP requires SharpZipLib package");
+                        throw new NotSupportedException("Password-protected ZIP extraction not yet implemented. Use SharpZipLib for password support.");
+                    }
+                    else
+                    {
+                        ZipFile.ExtractToDirectory(installerPath, targetDir, overwriteFiles: true);
+                    }
                 });
 
                 _logger.Info("ZIP extraction complete");

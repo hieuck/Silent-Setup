@@ -17,10 +17,13 @@ download:
   url: https://link-download-truc-tiep.com/installer.exe
   checksum: ""  # SHA256 hash (tùy chọn)
   mirrors: []
+  username: ""  # Nếu download cần đăng nhập (tùy chọn)
+  password: ""  # Mật khẩu download (tùy chọn)
 
 install:
   type: exe  # exe, msi, hoặc zip
   silent_args: /S  # Tham số cài đặt silent
+  password: ""  # Mật khẩu để giải nén ZIP (nếu type=zip và có mật khẩu)
   pre_install:
     kill_processes:
       - app.exe  # Process cần đóng trước khi cài
@@ -163,6 +166,7 @@ archive:
   file: plugin-pack.zip
   extract_to: "{app_dir}\plugins\"
   overwrite: true
+  password: "secret123"  # Mật khẩu nếu ZIP có bảo vệ (tùy chọn)
 ```
 
 ### Placeholders có sẵn:
@@ -270,6 +274,10 @@ patches/winrar-vietnamese/
 4. **HTTPS only**: Download URLs phải dùng HTTPS
 5. **Unique ID**: Mỗi app/patch phải có ID duy nhất
 6. **Test kỹ**: Test trong máy ảo trước khi dùng thật
+7. **Mật khẩu**: 
+   - Download password: Dùng cho HTTP Basic Authentication
+   - ZIP password: **Cần cài thêm SharpZipLib** (chưa hỗ trợ sẵn)
+   - Mật khẩu lưu plain text trong YAML - cân nhắc bảo mật
 
 ---
 
