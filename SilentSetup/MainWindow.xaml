@@ -10,6 +10,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -35,15 +36,70 @@
             </Grid>
         </Border>
 
+        <!-- Toolbar: Search, Filter, Sort -->
+        <Border Grid.Row="1" BorderBrush="#BDC3C7" BorderThickness="0,0,0,1" Padding="10" Background="#ECF0F1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Box -->
+                <TextBox x:Name="SearchTextBox" Grid.Column="0" Height="30"
+                         VerticalContentAlignment="Center"
+                         TextChanged="SearchTextBox_TextChanged">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Text" Value=""/>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                <VisualBrush.Visual>
+                                                    <TextBlock Text="Tìm kiếm app..." Foreground="Gray" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                                </VisualBrush.Visual>
+                                            </VisualBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+
+                <!-- Category Filter -->
+                <ComboBox x:Name="CategoryFilterComboBox" Grid.Column="1" Width="120" Height="30" Margin="10,0,0,0"
+                          SelectionChanged="CategoryFilterComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Tất cả" IsSelected="True"/>
+                    <ComboBoxItem Content="Browser"/>
+                    <ComboBoxItem Content="Development"/>
+                    <ComboBoxItem Content="Media"/>
+                    <ComboBoxItem Content="Utility"/>
+                </ComboBox>
+
+                <!-- Sort -->
+                <ComboBox x:Name="SortComboBox" Grid.Column="2" Width="150" Height="30" Margin="10,0,0,0"
+                          SelectionChanged="SortComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Tên (A-Z)" IsSelected="True"/>
+                    <ComboBoxItem Content="Tên (Z-A)"/>
+                    <ComboBoxItem Content="Đã cài"/>
+                    <ComboBoxItem Content="Chưa cài"/>
+                    <ComboBoxItem Content="Category"/>
+                </ComboBox>
+            </Grid>
+        </Border>
+
         <!-- App List -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="10">
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="10">
             <StackPanel x:Name="AppListPanel">
                 <TextBlock Text="Loading applications..." FontSize="14" Foreground="Gray" Margin="10"/>
             </StackPanel>
         </ScrollViewer>
 
         <!-- Action Buttons -->
-        <Border Grid.Row="2" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="10" Background="#ECF0F1">
+        <Border Grid.Row="3" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="10" Background="#ECF0F1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="Select All" Width="100" Height="35" Margin="5" Click="SelectAllButton_Click"/>
                 <Button Content="Deselect All" Width="100" Height="35" Margin="5" Click="DeselectAllButton_Click"/>

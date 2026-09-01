@@ -21,9 +21,11 @@ public partial class MainWindow : Window
     private readonly AppConfig _config;
 
     private List<AppManifest> _apps = new();
+    private List<AppManifest> _filteredApps = new();
     private List<PatchManifest> _patches = new();
     private Dictionary<string, CheckBox> _appCheckboxes = new();
     private Dictionary<string, List<CheckBox>> _patchCheckboxes = new();
+    private Dictionary<string, Border> _appPanels = new();
 
     public MainWindow()
     {
@@ -91,23 +93,83 @@ public partial class MainWindow : Window
         AppListPanel.Children.Clear();
         _appCheckboxes.Clear();
         _patchCheckboxes.Clear();
+        _appPanels.Clear();
 
-        if (!_apps.Any())
+        // Apply filters and sorting
+        ApplyFiltersAndSort();
+
+        if (!_filteredApps.Any())
         {
             AppListPanel.Children.Add(new TextBlock
             {
-                Text = "No applications found in apps/ directory.",
+                Text = _apps.Any() ? "Không tìm thấy app phù hợp." : "No applications found in apps/ directory.",
                 Margin = new Thickness(10),
                 Foreground = System.Windows.Media.Brushes.Gray
             });
             return;
         }
 
-        foreach (var app in _apps.OrderBy(a => a.Name))
+        foreach (var app in _filteredApps)
         {
             var appPanel = CreateAppPanel(app);
+            _appPanels[app.Id] = appPanel;
             AppListPanel.Children.Add(appPanel);
         }
+    }
+
+    private void ApplyFiltersAndSort()
+    {
+        _filteredApps = new List<AppManifest>(_apps);
+
+        // Search filter
+        var searchText = SearchTextBox?.Text?.ToLower() ?? "";
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            _filteredApps = _filteredApps.Where(a =>
+                a.Name.ToLower().Contains(searchText) ||
+                (a.Metadata?.Category?.ToLower().Contains(searchText) ?? false) ||
+                (a.Metadata?.Publisher?.ToLower().Contains(searchText) ?? false) ||
+                (a.Metadata?.Tags?.Any(t => t.ToLower().Contains(searchText)) ?? false)
+            ).ToList();
+        }
+
+        // Category filter
+        var selectedCategory = (CategoryFilterComboBox?.SelectedItem as ComboBoxItem)?.Content?.ToString();
+        if (!string.IsNullOrEmpty(selectedCategory) && selectedCategory != "Tất cả")
+        {
+            _filteredApps = _filteredApps.Where(a =>
+                a.Metadata?.Category?.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase) ?? false
+            ).ToList();
+        }
+
+        // Sort
+        var sortOption = (SortComboBox?.SelectedItem as ComboBoxItem)?.Content?.ToString();
+        _filteredApps = sortOption switch
+        {
+            "Tên (A-Z)" => _filteredApps.OrderBy(a => a.Name).ToList(),
+            "Tên (Z-A)" => _filteredApps.OrderByDescending(a => a.Name).ToList(),
+            "Đã cài" => _filteredApps.OrderByDescending(a => a.Status == AppStatus.Installed).ThenBy(a => a.Name).ToList(),
+            "Chưa cài" => _filteredApps.OrderBy(a => a.Status == AppStatus.Installed).ThenBy(a => a.Name).ToList(),
+            "Category" => _filteredApps.OrderBy(a => a.Metadata?.Category ?? "").ThenBy(a => a.Name).ToList(),
+            _ => _filteredApps.OrderBy(a => a.Name).ToList()
+        };
+    }
+
+    private void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        BuildUI();
+    }
+
+    private void CategoryFilterComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_apps.Any()) // Only rebuild if apps are loaded
+            BuildUI();
+    }
+
+    private void SortComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_apps.Any()) // Only rebuild if apps are loaded
+            BuildUI();
     }
 
     private Border CreateAppPanel(AppManifest app)
@@ -120,6 +182,29 @@ public partial class MainWindow : Window
             Padding = new Thickness(10),
             Background = System.Windows.Media.Brushes.White
         };
+
+        // Add context menu
+        var contextMenu = new ContextMenu();
+
+        var editMenuItem = new MenuItem { Header = "Chỉnh sửa" };
+        editMenuItem.Click += (s, e) => EditApp(app);
+        contextMenu.Items.Add(editMenuItem);
+
+        var deleteMenuItem = new MenuItem { Header = "Xóa" };
+        deleteMenuItem.Click += (s, e) => DeleteApp(app);
+        contextMenu.Items.Add(deleteMenuItem);
+
+        contextMenu.Items.Add(new Separator());
+
+        var detailsMenuItem = new MenuItem { Header = "Chi tiết" };
+        detailsMenuItem.Click += (s, e) => ShowAppDetails(app);
+        contextMenu.Items.Add(detailsMenuItem);
+
+        var homepageMenuItem = new MenuItem { Header = "Mở trang chủ" };
+        homepageMenuItem.Click += (s, e) => OpenHomepage(app);
+        contextMenu.Items.Add(homepageMenuItem);
+
+        border.ContextMenu = contextMenu;
 
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
@@ -392,6 +477,117 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             MessageBox.Show($"Failed to load logs: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // Context menu handlers
+    private void EditApp(AppManifest app)
+    {
+        try
+        {
+            var appsDir = Path.Combine(Directory.GetCurrentDirectory(), "apps");
+            var filePath = Path.Combine(appsDir, $"{app.Id}.yaml");
+
+            if (File.Exists(filePath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                MessageBox.Show($"Không tìm thấy file: {filePath}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Không thể mở file: {ex.Message}", "Lỗi",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void DeleteApp(AppManifest app)
+    {
+        var result = MessageBox.Show(
+            $"Xóa app '{app.Name}'?\n\nFile YAML sẽ bị xóa vĩnh viễn.",
+            "Xác nhận xóa",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            try
+            {
+                var appsDir = Path.Combine(Directory.GetCurrentDirectory(), "apps");
+                var filePath = Path.Combine(appsDir, $"{app.Id}.yaml");
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    MessageBox.Show($"Đã xóa {app.Name}", "Thành công",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Refresh
+                    _ = LoadManifests();
+                    BuildUI();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xóa: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void ShowAppDetails(AppManifest app)
+    {
+        var details = $@"Tên: {app.Name}
+ID: {app.Id}
+Trang chủ: {app.Homepage}
+Category: {app.Metadata?.Category ?? "N/A"}
+Publisher: {app.Metadata?.Publisher ?? "N/A"}
+License: {app.Metadata?.License ?? "N/A"}
+
+Status: {app.Status}
+Phiên bản đã cài: {app.InstalledVersion ?? "N/A"}
+Phiên bản mới nhất: {app.LatestVersion ?? "N/A"}
+
+Download URL: {app.Download.Url}
+Install Type: {app.Install.Type}
+Silent Args: {app.Install.SilentArgs}
+
+Mô tả: {app.Metadata?.Description ?? "N/A"}";
+
+        MessageBox.Show(details, $"Chi tiết: {app.Name}",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void OpenHomepage(AppManifest app)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(app.Homepage))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = app.Homepage,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                MessageBox.Show("App không có trang chủ.", "Thông báo",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Không thể mở browser: {ex.Message}", "Lỗi",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
