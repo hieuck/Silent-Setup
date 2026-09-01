@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+# User data
+cache/
+logs/
+patches/*/files/*
+!patches/_template/
+
+# Backups
+*.backup
+.backup/
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# User config overrides
+config.local.json

@@ -1,0 +1,36 @@
+name: Notepad++
+id: notepadplusplus
+homepage: https://notepad-plus-plus.org/
+
+download:
+  url: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7/npp.8.7.Installer.x64.exe
+  checksum: ""
+  mirrors: []
+
+install:
+  type: exe
+  silent_args: /S
+  pre_install:
+    kill_processes:
+      - notepad++.exe
+  post_install:
+    create_shortcuts: []
+
+detection:
+  method: both
+  registry:
+    - key: HKLM\SOFTWARE\Notepad++
+      value: ""
+  file:
+    path: C:\Program Files\Notepad++\notepad++.exe
+    version_check: true
+
+metadata:
+  description: Free source code editor and Notepad replacement
+  publisher: Don Ho
+  category: Development
+  license: GPL-3.0
+  tags:
+    - editor
+    - text
+    - development
