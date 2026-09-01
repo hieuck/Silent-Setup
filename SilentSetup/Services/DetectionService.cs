@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using SilentSetup.Models;
 
@@ -56,6 +57,22 @@ namespace SilentSetup.Services
                 if (isInstalled)
                 {
                     app.InstalledVersion = version;
+
+                    // Check for updates if version URL is provided
+                    if (!string.IsNullOrWhiteSpace(app.Download.VersionUrl))
+                    {
+                        var latestVersion = CheckLatestVersion(app);
+                        app.LatestVersion = latestVersion;
+
+                        if (!string.IsNullOrWhiteSpace(latestVersion) &&
+                            !string.IsNullOrWhiteSpace(version) &&
+                            latestVersion != version)
+                        {
+                            _logger.Info($"{app.Name} update available: {version} → {latestVersion}");
+                            return AppStatus.UpdateAvailable;
+                        }
+                    }
+
                     _logger.Info($"{app.Name} detected: installed (version: {version ?? "unknown"})");
                     return AppStatus.Installed;
                 }
@@ -209,6 +226,53 @@ namespace SilentSetup.Services
             }
 
             return null;
+        }
+
+        private string? CheckLatestVersion(AppManifest app)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(app.Download.VersionUrl))
+                    return null;
+
+                _logger.Info($"Checking latest version for {app.Name} from {app.Download.VersionUrl}");
+
+                using var httpClient = new HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = httpClient.GetStringAsync(app.Download.VersionUrl).Result;
+
+                // If version regex is provided, extract version from response
+                if (!string.IsNullOrWhiteSpace(app.Download.VersionRegex))
+                {
+                    var regex = new Regex(app.Download.VersionRegex);
+                    var match = regex.Match(response);
+                    if (match.Success && match.Groups.Count > 1)
+                    {
+                        var version = match.Groups[1].Value.Trim();
+                        _logger.Info($"Latest version extracted: {version}");
+                        return version;
+                    }
+                }
+                else
+                {
+                    // Assume the response is just the version string
+                    var version = response.Trim();
+                    if (!string.IsNullOrWhiteSpace(version) && version.Length < 50)
+                    {
+                        _logger.Info($"Latest version: {version}");
+                        return version;
+                    }
+                }
+
+                _logger.Warn($"Could not extract version from response");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Failed to check latest version for {app.Name}: {ex.Message}");
+                return null;
+            }
         }
 
         public void RefreshAllApps(List<AppManifest> apps)

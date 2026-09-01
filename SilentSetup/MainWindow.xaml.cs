@@ -353,6 +353,17 @@ public partial class MainWindow : Window
             MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
+    private void AddAppButton_Click(object sender, RoutedEventArgs e)
+    {
+        var addAppWindow = new AddAppWindow();
+        if (addAppWindow.ShowDialog() == true)
+        {
+            // Refresh to show new app
+            _ = LoadManifests();
+            BuildUI();
+        }
+    }
+
     private void ViewLogsButton_Click(object sender, RoutedEventArgs e)
     {
         try
