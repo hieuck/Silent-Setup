@@ -20,11 +20,10 @@ install:
 detection:
   method: both
   registry:
-    - key: HKLM\SOFTWARE\VideoLAN\VLC
+    - path: HKLM\SOFTWARE\VideoLAN\VLC
       value: Version
   file:
-    path: C:\Program Files\VideoLAN\VLC\vlc.exe
-    version_check: true
+    - path: C:\Program Files\VideoLAN\VLC\vlc.exe
 
 metadata:
   description: Free and open source cross-platform multimedia player

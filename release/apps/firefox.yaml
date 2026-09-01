@@ -19,11 +19,10 @@ install:
 detection:
   method: both
   registry:
-    - key: HKLM\SOFTWARE\Mozilla\Mozilla Firefox
+    - path: HKLM\SOFTWARE\Mozilla\Mozilla Firefox
       value: CurrentVersion
   file:
-    path: C:\Program Files\Mozilla Firefox\firefox.exe
-    version_check: true
+    - path: C:\Program Files\Mozilla Firefox\firefox.exe
 
 metadata:
   description: Free and open source web browser

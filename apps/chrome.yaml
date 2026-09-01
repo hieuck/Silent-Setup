@@ -19,11 +19,10 @@ install:
 detection:
   method: both
   registry:
-    - key: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Chrome
+    - path: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Chrome
       value: DisplayVersion
   file:
-    path: C:\Program Files\Google\Chrome\Application\chrome.exe
-    version_check: true
+    - path: C:\Program Files\Google\Chrome\Application\chrome.exe
 
 metadata:
   description: Fast, secure browser from Google

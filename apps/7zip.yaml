@@ -20,11 +20,10 @@ install:
 detection:
   method: both
   registry:
-    - key: HKLM\SOFTWARE\7-Zip
+    - path: HKLM\SOFTWARE\7-Zip
       value: Path
   file:
-    path: C:\Program Files\7-Zip\7z.exe
-    version_check: true
+    - path: C:\Program Files\7-Zip\7z.exe
 
 metadata:
   description: High compression ratio file archiver

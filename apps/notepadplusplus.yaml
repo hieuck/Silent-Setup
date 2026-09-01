@@ -19,11 +19,10 @@ install:
 detection:
   method: both
   registry:
-    - key: HKLM\SOFTWARE\Notepad++
+    - path: HKLM\SOFTWARE\Notepad++
       value: ""
   file:
-    path: C:\Program Files\Notepad++\notepad++.exe
-    version_check: true
+    - path: C:\Program Files\Notepad++\notepad++.exe
 
 metadata:
   description: Free source code editor and Notepad replacement
