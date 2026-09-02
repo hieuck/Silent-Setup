@@ -1,9 +1,11 @@
 name: AnyDesk
 id: anydesk
 homepage: https://anydesk.com
-download_url: https://download.anydesk.com/AnyDesk.exe
-install_method: exe
-install_args: --install --start-with-win --silent
+download:
+  url: https://download.anydesk.com/AnyDesk.exe
+install:
+  type: exe
+  args: --install --start-with-win --silent
 detection:
   registry:
     - path: HKLM\SOFTWARE\AnyDesk

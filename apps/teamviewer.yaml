@@ -1,9 +1,11 @@
 name: TeamViewer
 id: teamviewer
 homepage: https://www.teamviewer.com
-download_url: https://download.teamviewer.com/download/TeamViewer_Setup.exe
-install_method: exe
-install_args: /S
+download:
+  url: https://download.teamviewer.com/download/TeamViewer_Setup.exe
+install:
+  type: exe
+  args: /S
 detection:
   registry:
     - path: HKLM\SOFTWARE\TeamViewer
