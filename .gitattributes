@@ -1,32 +1,25 @@
 # Auto detect text files and normalize line endings to LF in repository
 * text=auto
 
-# Force LF for specific text file types
-*.cs text eol=lf
-*.xaml text eol=lf
-*.yaml text eol=lf
-*.yml text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.txt text eol=lf
-*.xml text eol=lf
-*.config text eol=lf
-*.ps1 text eol=lf
-*.sh text eol=lf
+# Source code
+*.cs text diff=csharp
+*.xaml text
+*.yaml text
+*.yml text
+*.md text
+*.json text
 
-# Force CRLF for Windows-specific files
+# Windows-specific files use CRLF
 *.sln text eol=crlf
-*.bat text eol=crlf
-*.cmd text eol=crlf
+*.csproj text eol=crlf
 
 # Binary files
 *.exe binary
 *.dll binary
+*.pdb binary
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.gif binary
 *.ico binary
 *.zip binary
-*.7z binary
-*.rar binary
