@@ -1,8 +1,8 @@
 name: 9Remote
 id: 9remote
-homepage: https://9remote.com
+homepage: https://9remote.cc
 download:
-  url: https://9remote.com/download/9Remote_Setup.exe
+  url: https://9remote.cc/download/9Remote_Setup.exe
 install:
   type: exe
   silent_args: /S /v/qn
@@ -12,7 +12,7 @@ detection:
 metadata:
   category: Remote
   publisher: 9Remote
-  description: Remote desktop software
+  description: Phần mềm điều khiển máy tính từ xa
   tags:
     - remote-desktop
     - support
