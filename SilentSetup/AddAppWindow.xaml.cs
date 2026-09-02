@@ -158,6 +158,85 @@ namespace SilentSetup
             }
         }
 
+        private async void AutoFillButton_Click(object sender, RoutedEventArgs e)
+        {
+            var url = HomepageTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(url))
+            {
+                MessageBox.Show("Vui lòng nhập URL trang chủ trước.", "Thiếu URL",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                HomepageTextBox.Focus();
+                return;
+            }
+
+            if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+            {
+                MessageBox.Show("URL phải bắt đầu với http:// hoặc https://", "URL không hợp lệ",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            AutoFillButton.IsEnabled = false;
+            AutoFillButton.Content = "Đang tải...";
+
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+                var html = await httpClient.GetStringAsync(url);
+
+                // Extract title from <title> tag
+                var titleMatch = System.Text.RegularExpressions.Regex.Match(html, @"<title[^>]*>(.*?)</title>",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (titleMatch.Success && string.IsNullOrEmpty(NameTextBox.Text))
+                {
+                    var title = System.Net.WebUtility.HtmlDecode(titleMatch.Groups[1].Value.Trim());
+                    // Clean up common suffixes
+                    title = System.Text.RegularExpressions.Regex.Replace(title, @"\s*[-|]\s*(Home|Official|Download|Free).*$", "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    NameTextBox.Text = title.Trim();
+                }
+
+                // Extract description from meta tags
+                var descMatch = System.Text.RegularExpressions.Regex.Match(html,
+                    @"<meta\s+(?:name|property)=[""'](?:description|og:description)[""']\s+content=[""'](.*?)[""']",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (descMatch.Success && string.IsNullOrEmpty(DescriptionTextBox.Text))
+                {
+                    var desc = System.Net.WebUtility.HtmlDecode(descMatch.Groups[1].Value.Trim());
+                    DescriptionTextBox.Text = desc;
+                }
+
+                // Try to find download link
+                var downloadMatch = System.Text.RegularExpressions.Regex.Match(html,
+                    @"<a[^>]+href=[""'](https?://[^""']*(?:download|install|setup|installer)[^""']*\.(?:exe|msi|zip))[""']",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (downloadMatch.Success && string.IsNullOrEmpty(DownloadUrlTextBox.Text))
+                {
+                    DownloadUrlTextBox.Text = downloadMatch.Groups[1].Value;
+                }
+
+                MessageBox.Show("Đã tự động điền thông tin từ trang web.\n\nVui lòng kiểm tra và điều chỉnh nếu cần.",
+                    "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể lấy thông tin từ URL:\n{ex.Message}\n\nVui lòng điền thủ công.",
+                    "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                AutoFillButton.IsEnabled = true;
+                AutoFillButton.Content = "Tự động điền";
+            }
+        }
+
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
