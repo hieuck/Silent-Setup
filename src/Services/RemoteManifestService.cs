@@ -101,52 +101,71 @@ public class RemoteManifestService
         try
         {
             var response = await _httpClient.GetStringAsync(GITHUB_PATCHES_API_URL);
-            var folders = JsonSerializer.Deserialize<List<GitHubFile>>(response);
+            var appFolders = JsonSerializer.Deserialize<List<GitHubFile>>(response);
 
-            if (folders == null) return 0;
+            if (appFolders == null) return 0;
 
-            var patchFolders = folders.Where(f => f.type == "dir" && !f.name.StartsWith("_")).ToList();
-            _logger.Info($"Found {patchFolders.Count} patch folders on GitHub");
+            var validAppFolders = appFolders.Where(f => f.type == "dir" && !f.name.StartsWith("_")).ToList();
+            _logger.Info($"Found {validAppFolders.Count} app folders in patches/");
 
             var downloadedCount = 0;
-            foreach (var folder in patchFolders)
+            foreach (var appFolder in validAppFolders)
             {
                 try
                 {
-                    // Get manifest.yaml from patch folder
-                    var manifestUrl = $"https://api.github.com/repos/hieuck/Silent-Setup/contents/patches/{folder.name}/manifest.yaml";
-                    var manifestResponse = await _httpClient.GetStringAsync(manifestUrl);
-                    var manifestFile = JsonSerializer.Deserialize<GitHubFile>(manifestResponse);
+                    // Get patch folders inside app folder (e.g., patches/notepadplusplus/)
+                    var appPatchesUrl = $"https://api.github.com/repos/hieuck/Silent-Setup/contents/patches/{appFolder.name}";
+                    var appPatchesResponse = await _httpClient.GetStringAsync(appPatchesUrl);
+                    var patchFolders = JsonSerializer.Deserialize<List<GitHubFile>>(appPatchesResponse);
 
-                    if (manifestFile != null && !string.IsNullOrEmpty(manifestFile.download_url))
+                    if (patchFolders == null) continue;
+
+                    var validPatches = patchFolders.Where(f => f.type == "dir" && !f.name.StartsWith("_")).ToList();
+
+                    foreach (var patchFolder in validPatches)
                     {
-                        var content = await _httpClient.GetStringAsync(manifestFile.download_url);
-
-                        // Parse YAML to get target_app
-                        var deserializer = new DeserializerBuilder()
-                            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-                            .Build();
-                        var patch = deserializer.Deserialize<PatchManifest>(content);
-
-                        if (patch != null && !string.IsNullOrEmpty(patch.TargetApp))
+                        try
                         {
-                            // Save to cache/patches/{target_app}/{patch_id}.yaml
-                            var appPatchesDir = Path.Combine(_cacheDir, "patches", patch.TargetApp);
-                            Directory.CreateDirectory(appPatchesDir);
-                            var localPath = Path.Combine(appPatchesDir, $"{folder.name}.yaml");
-                            await File.WriteAllTextAsync(localPath, content);
-                            downloadedCount++;
-                            _logger.Info($"Downloaded patch: {folder.name} -> {patch.TargetApp}");
+                            // Get manifest.yaml from patches/{app}/{patch-id}/manifest.yaml
+                            var manifestUrl = $"https://api.github.com/repos/hieuck/Silent-Setup/contents/patches/{appFolder.name}/{patchFolder.name}/manifest.yaml";
+                            var manifestResponse = await _httpClient.GetStringAsync(manifestUrl);
+                            var manifestFile = JsonSerializer.Deserialize<GitHubFile>(manifestResponse);
+
+                            if (manifestFile != null && !string.IsNullOrEmpty(manifestFile.download_url))
+                            {
+                                var content = await _httpClient.GetStringAsync(manifestFile.download_url);
+
+                                // Parse YAML to get target_app for validation
+                                var deserializer = new DeserializerBuilder()
+                                    .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                                    .Build();
+                                var patch = deserializer.Deserialize<PatchManifest>(content);
+
+                                if (patch != null && !string.IsNullOrEmpty(patch.TargetApp))
+                                {
+                                    // Save to cache/patches/{target_app}/{patch_id}.yaml
+                                    var appPatchesDir = Path.Combine(_cacheDir, "patches", patch.TargetApp);
+                                    Directory.CreateDirectory(appPatchesDir);
+                                    var localPath = Path.Combine(appPatchesDir, $"{patchFolder.name}.yaml");
+                                    await File.WriteAllTextAsync(localPath, content);
+                                    downloadedCount++;
+                                    _logger.Info($"Downloaded patch: {appFolder.name}/{patchFolder.name}");
+                                }
+                                else
+                                {
+                                    _logger.Warn($"Patch {patchFolder.name} has no target_app, skipping");
+                                }
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            _logger.Warn($"Patch {folder.name} has no target_app, skipping");
+                            _logger.Error($"Failed to download patch {appFolder.name}/{patchFolder.name}: {ex.Message}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"Failed to download patch {folder.name}: {ex.Message}");
+                    _logger.Error($"Failed to process app folder {appFolder.name}: {ex.Message}");
                 }
             }
 
