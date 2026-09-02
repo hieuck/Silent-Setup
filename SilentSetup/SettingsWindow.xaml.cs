@@ -197,6 +197,101 @@ namespace SilentSetup
             DialogResult = false;
             Close();
         }
+
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            try
+            {
+                var uri = e.Uri.ToString();
+                if (uri.StartsWith("http://") || uri.StartsWith("https://"))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = uri,
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), uri);
+                    if (File.Exists(fullPath))
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = fullPath,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể mở: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            CheckUpdateButton.IsEnabled = false;
+            UpdateStatusText.Text = "Đang kiểm tra...";
+            UpdateStatusText.Foreground = System.Windows.Media.Brushes.Gray;
+
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "SilentSetup");
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+                // Check GitHub releases API
+                var response = await httpClient.GetStringAsync("https://api.github.com/repos/yourusername/silent-setup/releases/latest");
+
+                // Parse version from response (simple check for "tag_name")
+                if (response.Contains("\"tag_name\""))
+                {
+                    var startIndex = response.IndexOf("\"tag_name\":\"") + 12;
+                    var endIndex = response.IndexOf("\"", startIndex);
+                    var latestVersion = response.Substring(startIndex, endIndex - startIndex).TrimStart('v');
+
+                    var currentVersion = "1.0.0";
+                    if (latestVersion != currentVersion)
+                    {
+                        UpdateStatusText.Text = $"Có bản cập nhật mới: {latestVersion}";
+                        UpdateStatusText.Foreground = System.Windows.Media.Brushes.Green;
+
+                        var result = MessageBox.Show(
+                            $"Có phiên bản mới {latestVersion} (hiện tại: {currentVersion})\n\nMở trang download?",
+                            "Cập nhật có sẵn",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Information);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "https://github.com/yourusername/silent-setup/releases/latest",
+                                UseShellExecute = true
+                            });
+                        }
+                    }
+                    else
+                    {
+                        UpdateStatusText.Text = "Bạn đang dùng phiên bản mới nhất";
+                        UpdateStatusText.Foreground = System.Windows.Media.Brushes.Green;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText.Text = $"Lỗi khi kiểm tra: {ex.Message}";
+                UpdateStatusText.Foreground = System.Windows.Media.Brushes.Red;
+            }
+            finally
+            {
+                CheckUpdateButton.IsEnabled = true;
+            }
+        }
     }
 
     public class InputDialog : Window

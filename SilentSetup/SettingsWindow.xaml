@@ -89,6 +89,91 @@
                 </Grid>
             </TabItem>
 
+            <!-- Help Tab -->
+            <TabItem Header="Trợ giúp">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Hướng dẫn sử dụng" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="1. Cài đặt phần mềm:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            • Tick chọn app muốn cài<LineBreak/>
+                            • Nhấn "Cài đặt đã chọn"<LineBreak/>
+                            • Chờ quá trình download và cài đặt hoàn tất
+                        </TextBlock>
+
+                        <TextBlock Text="2. Thêm app mới:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            • Nhấn nút "Thêm App"<LineBreak/>
+                            • Điền thông tin: tên, ID, category, URL download<LineBreak/>
+                            • Nhấn "Lưu" để tạo manifest YAML
+                        </TextBlock>
+
+                        <TextBlock Text="3. Chỉnh sửa app:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            • Chuột phải vào app → "Chỉnh sửa"<LineBreak/>
+                            • Sửa thông tin trong form<LineBreak/>
+                            • Nhấn "Lưu" để cập nhật
+                        </TextBlock>
+
+                        <TextBlock Text="4. Patches:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            • Patches sẽ tự hiển thị nếu có trong thư mục patches/<LineBreak/>
+                            • Tick chọn patch muốn áp dụng trước khi cài app<LineBreak/>
+                            • Quản lý patches tại tab "Patches" trong Cài đặt
+                        </TextBlock>
+
+                        <TextBlock Text="5. Tìm kiếm và lọc:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                            • Tìm kiếm: gõ tên app vào ô search<LineBreak/>
+                            • Lọc theo category: chọn từ dropdown<LineBreak/>
+                            • Sắp xếp: chọn tiêu chí sắp xếp
+                        </TextBlock>
+
+                        <TextBlock Text="Tài liệu chi tiết:" FontWeight="Bold" Margin="0,15,0,5"/>
+                        <TextBlock Margin="0,0,0,5">
+                            <Hyperlink NavigateUri="docs/USER_GUIDE.md" RequestNavigate="Hyperlink_RequestNavigate">
+                                Xem hướng dẫn chi tiết
+                            </Hyperlink>
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,5">
+                            <Hyperlink NavigateUri="docs/QUICK_START.md" RequestNavigate="Hyperlink_RequestNavigate">
+                                Hướng dẫn thêm app/patch
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Update Tab -->
+            <TabItem Header="Cập nhật">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Kiểm tra cập nhật" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <Border BorderBrush="#BDC3C7" BorderThickness="1" Padding="15" Margin="0,0,0,15" Background="#ECF0F1">
+                        <StackPanel>
+                            <TextBlock x:Name="CurrentVersionText" Text="Phiên bản hiện tại: 1.0.0" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="UpdateStatusText" Text="Chưa kiểm tra cập nhật" Margin="0,0,0,10" Foreground="Gray"/>
+                            <Button x:Name="CheckUpdateButton" Content="Kiểm tra cập nhật" Width="150" Height="35"
+                                    Click="CheckUpdateButton_Click" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Tự động cập nhật:" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <CheckBox x:Name="AutoUpdateCheckBox" Content="Kiểm tra cập nhật khi khởi động" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Kênh cập nhật:" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="UpdateChannelComboBox" Height="30" Margin="0,0,0,15">
+                        <ComboBoxItem Content="Stable (Ổn định)" IsSelected="True"/>
+                        <ComboBoxItem Content="Beta (Thử nghiệm)"/>
+                    </ComboBox>
+
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11">
+                        Lưu ý: Tính năng tự động cập nhật sẽ kiểm tra phiên bản mới từ GitHub repository.
+                    </TextBlock>
+                </StackPanel>
+            </TabItem>
+
             <!-- About Tab -->
             <TabItem Header="Thông tin">
                 <StackPanel Margin="10">
@@ -101,6 +186,13 @@
                     <TextBlock Text="• Hỗ trợ patch và Việt hóa" Margin="0,0,0,3"/>
                     <TextBlock Text="• Quản lý app qua giao diện" Margin="0,0,0,3"/>
                     <TextBlock Text="• Không cần cài đặt (portable)" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="GitHub Repository:" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Margin="0,0,0,15">
+                        <Hyperlink NavigateUri="https://github.com/yourusername/silent-setup" RequestNavigate="Hyperlink_RequestNavigate">
+                            https://github.com/yourusername/silent-setup
+                        </Hyperlink>
+                    </TextBlock>
 
                     <TextBlock Text="© 2026 Silent Setup Project" Foreground="Gray" FontSize="11"/>
                     <TextBlock Text="MIT License" Foreground="Gray" FontSize="11"/>
