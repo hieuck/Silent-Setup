@@ -1,0 +1,18 @@
+name: AnyDesk
+id: anydesk
+homepage: https://anydesk.com
+download_url: https://download.anydesk.com/AnyDesk.exe
+install_method: exe
+install_args: --install --start-with-win --silent
+detection:
+  registry:
+    - path: HKLM\SOFTWARE\AnyDesk
+      key: DisplayVersion
+metadata:
+  category: Remote
+  publisher: AnyDesk Software GmbH
+  description: Fast remote desktop software
+  tags:
+    - remote-desktop
+    - support
+    - lightweight

@@ -1,0 +1,18 @@
+name: TeamViewer
+id: teamviewer
+homepage: https://www.teamviewer.com
+download_url: https://download.teamviewer.com/download/TeamViewer_Setup.exe
+install_method: exe
+install_args: /S
+detection:
+  registry:
+    - path: HKLM\SOFTWARE\TeamViewer
+      key: Version
+metadata:
+  category: Remote
+  publisher: TeamViewer Germany GmbH
+  description: Remote desktop and support solution
+  tags:
+    - remote-desktop
+    - support
+    - collaboration

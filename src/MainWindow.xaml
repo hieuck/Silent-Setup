@@ -98,6 +98,7 @@
                     <ComboBoxItem Content="Browser"/>
                     <ComboBoxItem Content="Development"/>
                     <ComboBoxItem Content="Media"/>
+                    <ComboBoxItem Content="Remote"/>
                     <ComboBoxItem Content="Utility"/>
                 </ComboBox>
 

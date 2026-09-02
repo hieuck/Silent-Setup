@@ -1,0 +1,17 @@
+name: UltraViewer
+id: ultraviewer
+homepage: https://www.ultraviewer.net
+download_url: https://www.ultraviewer.net/en/UltraViewer_setup_6.6_en.exe
+install_method: exe
+install_args: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+detection:
+  file:
+    - path: C:\Program Files (x86)\UltraViewer\UltraViewer_Desktop.exe
+metadata:
+  category: Remote
+  publisher: DucFabulous Team
+  description: Free remote desktop software for Vietnam users
+  tags:
+    - remote-desktop
+    - support
+    - free
