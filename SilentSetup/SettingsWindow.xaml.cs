@@ -136,18 +136,11 @@ namespace SilentSetup
 
                 if (File.Exists(manifestPath))
                 {
-                    try
+                    var editWindow = new EditPatchWindow(patch, manifestPath);
+                    if (editWindow.ShowDialog() == true)
                     {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = manifestPath,
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Không thể mở file: {ex.Message}", "Lỗi",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        // Refresh patch list
+                        LoadSettings();
                     }
                 }
             }
