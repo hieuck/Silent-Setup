@@ -22,10 +22,52 @@ namespace SilentSetup
 
         private void LoadSettings()
         {
+            // Load patches
             PatchListBox.Items.Clear();
             foreach (var patch in _patches)
             {
                 PatchListBox.Items.Add($"{patch.Name} ({patch.TargetApp})");
+            }
+
+            // Load categories
+            CategoryListBox.Items.Clear();
+
+            // Add default categories
+            var defaultCategories = new[] { "Browser", "Development", "Media", "Utility" };
+            foreach (var cat in defaultCategories)
+            {
+                var item = new ListBoxItem { Content = cat, Tag = "default" };
+                CategoryListBox.Items.Add(item);
+            }
+
+            // Load custom categories from config
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "config.json");
+            if (File.Exists(configPath))
+            {
+                try
+                {
+                    var json = File.ReadAllText(configPath);
+                    var config = System.Text.Json.JsonDocument.Parse(json);
+
+                    if (config.RootElement.TryGetProperty("ui", out var ui) &&
+                        ui.TryGetProperty("custom_categories", out var categories))
+                    {
+                        foreach (var cat in categories.EnumerateArray())
+                        {
+                            var categoryName = cat.GetString();
+                            if (!string.IsNullOrEmpty(categoryName))
+                            {
+                                var item = new ListBoxItem { Content = categoryName, Tag = "custom" };
+                                CategoryListBox.Items.Add(item);
+                                _customCategories.Add(categoryName);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore errors loading config
+                }
             }
         }
 
@@ -186,10 +228,80 @@ namespace SilentSetup
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Cài đặt đã được lưu.", "Thành công",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            DialogResult = true;
-            Close();
+            try
+            {
+                // Save custom categories to config.json
+                var configPath = Path.Combine(Directory.GetCurrentDirectory(), "config.json");
+
+                System.Text.Json.JsonDocument? config = null;
+                if (File.Exists(configPath))
+                {
+                    var json = File.ReadAllText(configPath);
+                    config = System.Text.Json.JsonDocument.Parse(json);
+                }
+
+                // Build new config with updated categories
+                using var stream = new MemoryStream();
+                using var writer = new System.Text.Json.Utf8JsonWriter(stream, new System.Text.Json.JsonWriterOptions { Indented = true });
+
+                writer.WriteStartObject();
+
+                // Copy existing properties
+                if (config != null && config.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    foreach (var property in config.RootElement.EnumerateObject())
+                    {
+                        if (property.Name == "ui")
+                        {
+                            // Write ui section with updated custom_categories
+                            writer.WritePropertyName("ui");
+                            writer.WriteStartObject();
+
+                            foreach (var uiProp in property.Value.EnumerateObject())
+                            {
+                                if (uiProp.Name == "custom_categories")
+                                {
+                                    writer.WritePropertyName("custom_categories");
+                                    writer.WriteStartArray();
+                                    foreach (var cat in _customCategories)
+                                    {
+                                        writer.WriteStringValue(cat);
+                                    }
+                                    writer.WriteEndArray();
+                                }
+                                else
+                                {
+                                    writer.WritePropertyName(uiProp.Name);
+                                    uiProp.Value.WriteTo(writer);
+                                }
+                            }
+
+                            writer.WriteEndObject();
+                        }
+                        else
+                        {
+                            writer.WritePropertyName(property.Name);
+                            property.Value.WriteTo(writer);
+                        }
+                    }
+                }
+
+                writer.WriteEndObject();
+                writer.Flush();
+
+                var updatedJson = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+                File.WriteAllText(configPath, updatedJson);
+
+                MessageBox.Show("Cài đặt đã được lưu.", "Thành công",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                DialogResult = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu cài đặt: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

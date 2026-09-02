@@ -16,7 +16,8 @@
   },
   "ui": {
     "language": "en",
-    "theme": "light"
+    "theme": "light",
+    "custom_categories": []
   },
   "profiles": {
     "example-dev": [
