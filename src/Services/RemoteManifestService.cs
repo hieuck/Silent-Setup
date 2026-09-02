@@ -1,6 +1,9 @@
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using SilentSetup.Models;
 
 namespace SilentSetup.Services;
 
@@ -118,12 +121,27 @@ public class RemoteManifestService
                     if (manifestFile != null && !string.IsNullOrEmpty(manifestFile.download_url))
                     {
                         var content = await _httpClient.GetStringAsync(manifestFile.download_url);
-                        var patchesDir = Path.Combine(_cacheDir, "patches");
-                        Directory.CreateDirectory(patchesDir);
-                        var localPath = Path.Combine(patchesDir, $"{folder.name}.yaml");
-                        await File.WriteAllTextAsync(localPath, content);
-                        downloadedCount++;
-                        _logger.Info($"Downloaded patch: {folder.name}");
+
+                        // Parse YAML to get target_app
+                        var deserializer = new DeserializerBuilder()
+                            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                            .Build();
+                        var patch = deserializer.Deserialize<PatchManifest>(content);
+
+                        if (patch != null && !string.IsNullOrEmpty(patch.TargetApp))
+                        {
+                            // Save to cache/patches/{target_app}/{patch_id}.yaml
+                            var appPatchesDir = Path.Combine(_cacheDir, "patches", patch.TargetApp);
+                            Directory.CreateDirectory(appPatchesDir);
+                            var localPath = Path.Combine(appPatchesDir, $"{folder.name}.yaml");
+                            await File.WriteAllTextAsync(localPath, content);
+                            downloadedCount++;
+                            _logger.Info($"Downloaded patch: {folder.name} -> {patch.TargetApp}");
+                        }
+                        else
+                        {
+                            _logger.Warn($"Patch {folder.name} has no target_app, skipping");
+                        }
                     }
                 }
                 catch (Exception ex)

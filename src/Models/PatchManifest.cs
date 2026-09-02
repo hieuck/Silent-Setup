@@ -24,6 +24,7 @@ namespace SilentSetup.Models
         public RollbackConfig? Rollback { get; set; }
         public PatchMetadata? Metadata { get; set; }
         public SecurityConfig? Security { get; set; }
+        public string? Notes { get; set; }
 
         // Runtime properties
         public string PatchDirectory { get; set; } = string.Empty; // Full path to patches/patch-id/
@@ -109,6 +110,7 @@ namespace SilentSetup.Models
         public string? Version { get; set; }
         public string? Description { get; set; }
         public string? SourceUrl { get; set; }
+        public string? Homepage { get; set; }
         public string? LastUpdated { get; set; }
         public List<string>? Tags { get; set; }
     }

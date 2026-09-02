@@ -73,13 +73,47 @@ namespace SilentSetup.Services
                 return patches;
             }
 
-            // Support both folder structure (local) and flat YAML files (remote cache)
-            // 1. Check for flat YAML files first (remote cache format)
-            var yamlFiles = Directory.GetFiles(patchesDirectory, "*.yaml")
+            // Support 3 structures:
+            // 1. Organized by app: patches/{app}/*.yaml (remote cache format)
+            // 2. Flat YAML files: patches/*.yaml (legacy)
+            // 3. Folder with manifest: patches/{patch-id}/manifest.yaml (local development)
+
+            // Load from app subdirectories (patches/{app}/*.yaml)
+            var appDirs = Directory.GetDirectories(patchesDirectory)
+                .Where(d => !Path.GetFileName(d).StartsWith("_"));
+
+            foreach (var appDir in appDirs)
+            {
+                var yamlFiles = Directory.GetFiles(appDir, "*.yaml")
+                    .Concat(Directory.GetFiles(appDir, "*.yml"))
+                    .Where(f => !Path.GetFileName(f).StartsWith("_"));
+
+                foreach (var file in yamlFiles)
+                {
+                    try
+                    {
+                        var yaml = File.ReadAllText(file);
+                        var manifest = _yamlDeserializer.Deserialize<PatchManifest>(yaml);
+
+                        if (ValidatePatchManifest(manifest))
+                        {
+                            patches.Add(manifest);
+                            _logger.Info($"Loaded patch manifest: {manifest.Name} ({manifest.Id}) for {manifest.TargetApp}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Failed to load patch from {file}: {ex.Message}");
+                    }
+                }
+            }
+
+            // Load flat YAML files in root (legacy format)
+            var rootYamlFiles = Directory.GetFiles(patchesDirectory, "*.yaml")
                 .Concat(Directory.GetFiles(patchesDirectory, "*.yml"))
                 .Where(f => !Path.GetFileName(f).StartsWith("_"));
 
-            foreach (var file in yamlFiles)
+            foreach (var file in rootYamlFiles)
             {
                 try
                 {
@@ -98,11 +132,8 @@ namespace SilentSetup.Services
                 }
             }
 
-            // 2. Check for folder structure (local format)
-            var patchDirs = Directory.GetDirectories(patchesDirectory)
-                .Where(d => !Path.GetFileName(d).StartsWith("_")); // Skip templates
-
-            foreach (var dir in patchDirs)
+            // Load folder structure (patches/{patch-id}/manifest.yaml)
+            foreach (var dir in appDirs)
             {
                 var manifestFile = Path.Combine(dir, "manifest.yaml");
                 if (!File.Exists(manifestFile))
@@ -112,8 +143,7 @@ namespace SilentSetup.Services
 
                 if (!File.Exists(manifestFile))
                 {
-                    _logger.Warn($"No manifest found in patch directory: {dir}");
-                    continue;
+                    continue; // Already processed as app directory above
                 }
 
                 try
