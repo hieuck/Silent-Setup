@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using SilentSetup.Models;
+using SilentSetup.Services;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -11,9 +12,12 @@ namespace SilentSetup
 {
     public partial class AddAppWindow : Window
     {
-        public AddAppWindow()
+        private readonly RemoteManifestService _remoteManifestService;
+
+        public AddAppWindow(RemoteManifestService remoteManifestService)
         {
             InitializeComponent();
+            _remoteManifestService = remoteManifestService;
         }
 
         private void IdTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -84,7 +88,7 @@ namespace SilentSetup
             }
 
             // Check if ID already exists
-            var appsDir = Path.Combine(Directory.GetCurrentDirectory(), "apps");
+            var appsDir = _remoteManifestService.GetLocalAppsDirectory();
             var filePath = Path.Combine(appsDir, $"{IdTextBox.Text.Trim()}.yaml");
 
             if (File.Exists(filePath))
@@ -135,9 +139,6 @@ namespace SilentSetup
                         new FileDetection { Path = FilePathTextBox.Text.Trim() }
                     };
                 }
-
-                // Ensure apps directory exists
-                Directory.CreateDirectory(appsDir);
 
                 // Save to YAML file
                 var serializer = new SerializerBuilder()

@@ -219,6 +219,22 @@ public class RemoteManifestService
         }
     }
 
+    public string GetLocalAppsDirectory()
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var localAppsDir = Path.Combine(appDataPath, "SilentSetup", "local_apps");
+        Directory.CreateDirectory(localAppsDir);
+        return localAppsDir;
+    }
+
+    public string GetLocalPatchesDirectory()
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var localPatchesDir = Path.Combine(appDataPath, "SilentSetup", "local_patches");
+        Directory.CreateDirectory(localPatchesDir);
+        return localPatchesDir;
+    }
+
     public class CacheComparisonResult
     {
         public bool Success { get; set; }

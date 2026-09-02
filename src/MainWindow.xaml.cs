@@ -99,12 +99,50 @@ public partial class MainWindow : Window
 
         await Task.Run(() =>
         {
+            // Load remote apps from cache
             var cacheDir = _remoteManifestService.GetCacheDirectory();
             _apps = _manifestLoader.LoadApps(cacheDir);
+
+            // Load local apps and merge
+            var localAppsDir = _remoteManifestService.GetLocalAppsDirectory();
+            var localApps = _manifestLoader.LoadApps(localAppsDir);
+
+            // Merge: local apps override remote if same ID
+            foreach (var localApp in localApps)
+            {
+                var existingIndex = _apps.FindIndex(a => a.Id == localApp.Id);
+                if (existingIndex >= 0)
+                {
+                    _apps[existingIndex] = localApp;
+                    _logger.Info($"Local app '{localApp.Name}' overrides remote");
+                }
+                else
+                {
+                    _apps.Add(localApp);
+                    _logger.Info($"Added local app '{localApp.Name}'");
+                }
+            }
 
             // Load patches from cache/patches subfolder
             var patchesDir = Path.Combine(cacheDir, "patches");
             _patches = _manifestLoader.LoadPatches(patchesDir);
+
+            // Load local patches and merge
+            var localPatchesDir = _remoteManifestService.GetLocalPatchesDirectory();
+            var localPatches = _manifestLoader.LoadPatches(localPatchesDir);
+
+            foreach (var localPatch in localPatches)
+            {
+                var existingIndex = _patches.FindIndex(p => p.Id == localPatch.Id);
+                if (existingIndex >= 0)
+                {
+                    _patches[existingIndex] = localPatch;
+                }
+                else
+                {
+                    _patches.Add(localPatch);
+                }
+            }
 
             _detectionService.RefreshAllApps(_apps);
         });
@@ -484,7 +522,7 @@ public partial class MainWindow : Window
         Window? dialog = result switch
         {
             MessageBoxResult.Yes => new AddAppWizard(),
-            MessageBoxResult.No => new AddAppWindow(),
+            MessageBoxResult.No => new AddAppWindow(_remoteManifestService),
             _ => null
         };
 
