@@ -1,0 +1,13 @@
+name: Compare Plugin
+id: npp-compare-plugin
+target_app: notepadplusplus
+type: download-extract
+download:
+  url: https://github.com/pnedev/compare-plugin/releases/latest/download/ComparePlugin_x64.zip
+files:
+  - name: ComparePlugin.dll
+    destination: '{app_dir}\plugins\ComparePlugin\ComparePlugin.dll'
+metadata:
+  description: Compare and merge files side-by-side in Notepad++
+  homepage: https://github.com/pnedev/compare-plugin
+  author: pnedev

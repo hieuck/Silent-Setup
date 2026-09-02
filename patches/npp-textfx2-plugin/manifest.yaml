@@ -1,0 +1,13 @@
+name: TextFX2 Plugin
+id: npp-textfx2-plugin
+target_app: notepadplusplus
+type: download-extract
+download:
+  url: https://github.com/rainman74/NPPTextFX2/releases/latest/download/NPPTextFX2.zip
+files:
+  - name: NPPTextFX2.dll
+    destination: '{app_dir}\plugins\NPPTextFX2\NPPTextFX2.dll'
+metadata:
+  description: Text manipulation and formatting tools for Notepad++
+  homepage: https://github.com/rainman74/NPPTextFX2
+  author: rainman74

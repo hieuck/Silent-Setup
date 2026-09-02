@@ -1,0 +1,13 @@
+name: Explorer Plugin
+id: npp-explorer-plugin
+target_app: notepadplusplus
+type: download-extract
+download:
+  url: https://github.com/oviradoi/npp-explorer-plugin/releases/latest/download/Explorer.zip
+files:
+  - name: Explorer.dll
+    destination: '{app_dir}\plugins\Explorer\Explorer.dll'
+metadata:
+  description: File explorer panel for Notepad++
+  homepage: https://github.com/oviradoi/npp-explorer-plugin
+  author: oviradoi
