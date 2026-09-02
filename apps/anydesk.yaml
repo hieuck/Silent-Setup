@@ -5,7 +5,7 @@ download:
   url: https://download.anydesk.com/AnyDesk.exe
 install:
   type: exe
-  args: --install --start-with-win --silent
+  silent_args: --install --start-with-win --silent
 detection:
   registry:
     - path: HKLM\SOFTWARE\AnyDesk

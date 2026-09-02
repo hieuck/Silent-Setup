@@ -5,7 +5,7 @@ download:
   url: https://download.teamviewer.com/download/TeamViewer_Setup.exe
 install:
   type: exe
-  args: /S
+  silent_args: /S
 detection:
   registry:
     - path: HKLM\SOFTWARE\TeamViewer
