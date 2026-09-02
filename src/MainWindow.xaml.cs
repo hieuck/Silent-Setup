@@ -82,10 +82,22 @@ public partial class MainWindow : Window
     {
         StatusText.Text = "Loading manifests...";
 
-        // Check and update cache if needed
-        if (_remoteManifestService.IsCacheStale())
+        // Check for remote updates first (commit SHA check)
+        var hasRemoteUpdates = await _remoteManifestService.HasRemoteUpdatesAsync();
+
+        // Check and update cache if needed (time-based OR remote changes)
+        if (_remoteManifestService.IsCacheStale() || hasRemoteUpdates)
         {
-            StatusText.Text = "Updating manifest cache from GitHub...";
+            if (hasRemoteUpdates)
+            {
+                StatusText.Text = "New updates available from GitHub, downloading...";
+                _logger.Info("Remote updates detected, refreshing cache");
+            }
+            else
+            {
+                StatusText.Text = "Cache expired (24h), updating from GitHub...";
+            }
+
             var updated = await _remoteManifestService.UpdateCacheAsync();
             if (updated)
             {

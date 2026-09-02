@@ -69,17 +69,21 @@ public class RemoteManifestService
             var patchesDownloaded = await DownloadPatchesAsync();
             _logger.Info($"Downloaded {patchesDownloaded} patch manifests");
 
+            // Get latest commit SHA
+            var commitSha = await GetLatestCommitShaAsync();
+
             // Update cache metadata
             var cacheMeta = new CacheMetadata
             {
                 LastUpdate = DateTime.UtcNow,
                 FileCount = downloadedCount,
-                PatchCount = patchesDownloaded
+                PatchCount = patchesDownloaded,
+                CommitSha = commitSha
             };
             var metaJson = JsonSerializer.Serialize(cacheMeta, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(_cacheMetaFile, metaJson);
 
-            _logger.Info($"Cache updated successfully: {downloadedCount} apps, {patchesDownloaded} patches");
+            _logger.Info($"Cache updated successfully: {downloadedCount} apps, {patchesDownloaded} patches (SHA: {commitSha?[..7]})");
             return true;
         }
         catch (Exception ex)
@@ -236,6 +240,41 @@ public class RemoteManifestService
         return localPatchesDir;
     }
 
+    public async Task<string?> GetLatestCommitShaAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetStringAsync("https://api.github.com/repos/hieuck/Silent-Setup/commits/main");
+            var commit = JsonSerializer.Deserialize<JsonElement>(response);
+            return commit.GetProperty("sha").GetString();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to fetch latest commit SHA: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<bool> HasRemoteUpdatesAsync()
+    {
+        var remoteSha = await GetLatestCommitShaAsync();
+        if (remoteSha == null) return false;
+
+        if (!File.Exists(_cacheMetaFile)) return true;
+
+        try
+        {
+            var metaJson = File.ReadAllText(_cacheMetaFile);
+            var cacheMeta = JsonSerializer.Deserialize<CacheMetadata>(metaJson);
+
+            return cacheMeta?.CommitSha != remoteSha;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
     public class CacheComparisonResult
     {
         public bool Success { get; set; }
@@ -259,5 +298,6 @@ public class RemoteManifestService
         public DateTime LastUpdate { get; set; }
         public int FileCount { get; set; }
         public int PatchCount { get; set; }
+        public string? CommitSha { get; set; }
     }
 }
