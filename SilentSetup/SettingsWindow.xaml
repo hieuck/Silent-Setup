@@ -174,6 +174,49 @@
                 </StackPanel>
             </TabItem>
 
+            <!-- Feedback Tab -->
+            <TabItem Header="Góp ý">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Gửi góp ý / Báo lỗi / Yêu cầu tính năng" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Loại góp ý:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="FeedbackTypeComboBox" Height="30" Margin="0,0,0,15">
+                            <ComboBoxItem Content="Báo lỗi" IsSelected="True"/>
+                            <ComboBoxItem Content="Yêu cầu tính năng mới"/>
+                            <ComboBoxItem Content="Yêu cầu thêm app"/>
+                            <ComboBoxItem Content="Góp ý cải thiện"/>
+                            <ComboBoxItem Content="Khác"/>
+                        </ComboBox>
+
+                        <TextBlock Text="Tiêu đề:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="FeedbackTitleTextBox" Height="30" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Nội dung chi tiết:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="FeedbackContentTextBox" Height="150" TextWrapping="Wrap"
+                                 AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Email (tùy chọn):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="FeedbackEmailTextBox" Height="30" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
+
+                        <Button x:Name="SubmitFeedbackButton" Content="Gửi góp ý" Width="120" Height="35"
+                                Click="SubmitFeedbackButton_Click" HorizontalAlignment="Left" Background="#3498DB" Foreground="White"/>
+
+                        <Border BorderBrush="#BDC3C7" BorderThickness="1" Padding="10" Margin="0,20,0,0" Background="#ECF0F1">
+                            <StackPanel>
+                                <TextBlock Text="📝 Lưu ý:" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="Gray">
+                                    • Góp ý sẽ được gửi đến GitHub Issues của dự án<LineBreak/>
+                                    • Email không bắt buộc nhưng giúp chúng tôi liên hệ nếu cần<LineBreak/>
+                                    • Báo lỗi vui lòng mô tả chi tiết các bước tái hiện<LineBreak/>
+                                    • Yêu cầu app mới vui lòng cung cấp link trang chủ
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- About Tab -->
             <TabItem Header="Thông tin">
                 <StackPanel Margin="10">

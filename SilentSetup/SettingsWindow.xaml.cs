@@ -292,6 +292,69 @@ namespace SilentSetup
                 CheckUpdateButton.IsEnabled = true;
             }
         }
+
+        private void SubmitFeedbackButton_Click(object sender, RoutedEventArgs e)
+        {
+            var type = ((ComboBoxItem)FeedbackTypeComboBox.SelectedItem)?.Content?.ToString() ?? "Khác";
+            var title = FeedbackTitleTextBox.Text.Trim();
+            var content = FeedbackContentTextBox.Text.Trim();
+            var email = FeedbackEmailTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(title))
+            {
+                MessageBox.Show("Vui lòng nhập tiêu đề.", "Thiếu thông tin",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                FeedbackTitleTextBox.Focus();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                MessageBox.Show("Vui lòng nhập nội dung chi tiết.", "Thiếu thông tin",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                FeedbackContentTextBox.Focus();
+                return;
+            }
+
+            // Build GitHub issue URL
+            var issueTitle = $"[{type}] {title}";
+            var issueBody = $"**Loại góp ý:** {type}\n\n**Nội dung:**\n{content}\n\n";
+            if (!string.IsNullOrEmpty(email))
+            {
+                issueBody += $"**Email liên hệ:** {email}\n\n";
+            }
+            issueBody += "---\n_Gửi từ Silent Setup v1.0.0_";
+
+            var encodedTitle = Uri.EscapeDataString(issueTitle);
+            var encodedBody = Uri.EscapeDataString(issueBody);
+            var issueUrl = $"https://github.com/yourusername/silent-setup/issues/new?title={encodedTitle}&body={encodedBody}";
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = issueUrl,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Trình duyệt sẽ mở trang GitHub Issues.\n\nVui lòng đăng nhập GitHub và nhấn 'Submit new issue'.",
+                    "Mở trình duyệt",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                // Clear form
+                FeedbackTitleTextBox.Clear();
+                FeedbackContentTextBox.Clear();
+                FeedbackEmailTextBox.Clear();
+                FeedbackTypeComboBox.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể mở trình duyệt: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     public class InputDialog : Window

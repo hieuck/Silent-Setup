@@ -1,0 +1,30 @@
+{
+  "download": {
+    "cache_dir": "cache",
+    "cache_size_limit_mb": 5000,
+    "timeout_seconds": 300,
+    "retry_count": 3
+  },
+  "install": {
+    "timeout_seconds": 600,
+    "run_as_admin": true,
+    "verify_after_install": true
+  },
+  "proxy": {
+    "enabled": false,
+    "url": ""
+  },
+  "ui": {
+    "language": "en",
+    "theme": "light"
+  },
+  "profiles": {
+    "example-dev": [
+      "vscode",
+      "git"
+    ],
+    "example-media": [
+      "vlc"
+    ]
+  }
+}
