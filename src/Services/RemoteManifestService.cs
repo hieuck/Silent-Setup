@@ -21,8 +21,9 @@ public class RemoteManifestService
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "SilentSetup/1.0");
 
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        _cacheDir = Path.Combine(appDataPath, "SilentSetup", "cache");
+        // Use exe directory for portable app
+        var exeDir = AppContext.BaseDirectory;
+        _cacheDir = Path.Combine(exeDir, "cache");
         _cacheMetaFile = Path.Combine(_cacheDir, "cache_meta.json");
 
         Directory.CreateDirectory(_cacheDir);
@@ -221,16 +222,16 @@ public class RemoteManifestService
 
     public string GetLocalAppsDirectory()
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var localAppsDir = Path.Combine(appDataPath, "SilentSetup", "local_apps");
+        var exeDir = AppContext.BaseDirectory;
+        var localAppsDir = Path.Combine(exeDir, "local_apps");
         Directory.CreateDirectory(localAppsDir);
         return localAppsDir;
     }
 
     public string GetLocalPatchesDirectory()
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var localPatchesDir = Path.Combine(appDataPath, "SilentSetup", "local_patches");
+        var exeDir = AppContext.BaseDirectory;
+        var localPatchesDir = Path.Combine(exeDir, "local_patches");
         Directory.CreateDirectory(localPatchesDir);
         return localPatchesDir;
     }

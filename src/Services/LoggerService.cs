@@ -12,7 +12,9 @@ namespace SilentSetup.Services
 
         public LoggerService(string logDirectory = "logs")
         {
-            _logDirectory = logDirectory;
+            // Use exe directory for portable app
+            var exeDir = AppContext.BaseDirectory;
+            _logDirectory = Path.Combine(exeDir, logDirectory);
             Directory.CreateDirectory(_logDirectory);
         }
 
