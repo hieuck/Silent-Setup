@@ -11,7 +11,7 @@ namespace SilentSetup.Models
         public string Name { get; set; } = string.Empty;
         public string Id { get; set; } = string.Empty;
         public string TargetApp { get; set; } = string.Empty;
-        public string Type { get; set; } = "copy-files"; // copy-files, executable, registry, archive
+        public string Type { get; set; } = "copy-files"; // copy-files, executable, registry, archive, download-extract
 
         // Optional fields
         public CompatibilityConfig? Compatibility { get; set; }
@@ -19,6 +19,7 @@ namespace SilentSetup.Models
         public ExecuteConfig? Execute { get; set; }
         public List<RegistryOperation>? Registry { get; set; }
         public ArchiveConfig? Archive { get; set; }
+        public PatchDownloadConfig? Download { get; set; }
         public VerificationConfig? Verification { get; set; }
         public RollbackConfig? Rollback { get; set; }
         public PatchMetadata? Metadata { get; set; }
@@ -71,6 +72,13 @@ namespace SilentSetup.Models
         public string? Password { get; set; }
         public List<string>? Include { get; set; }
         public List<string>? Exclude { get; set; }
+    }
+
+    public class PatchDownloadConfig
+    {
+        public string Url { get; set; } = string.Empty;
+        public string? FileName { get; set; }
+        public string? Checksum { get; set; }
     }
 
     public class VerificationConfig

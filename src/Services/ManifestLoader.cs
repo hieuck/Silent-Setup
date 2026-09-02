@@ -238,6 +238,19 @@ namespace SilentSetup.Services
                     }
                     break;
 
+                case "download-extract":
+                    if (patch.Download == null || string.IsNullOrWhiteSpace(patch.Download.Url))
+                    {
+                        _logger.Error($"Patch {patch.Name}: type 'download-extract' requires 'download.url'");
+                        return false;
+                    }
+                    if (patch.Files == null || !patch.Files.Any())
+                    {
+                        _logger.Error($"Patch {patch.Name}: type 'download-extract' requires 'files' array");
+                        return false;
+                    }
+                    break;
+
                 default:
                     _logger.Error($"Patch {patch.Name}: unknown type '{patch.Type}'");
                     return false;

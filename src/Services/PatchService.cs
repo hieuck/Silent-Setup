@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Net.Http;
 using SilentSetup.Models;
 
 namespace SilentSetup.Services
@@ -42,6 +43,7 @@ namespace SilentSetup.Services
                     "executable" => await ApplyExecutable(patch, appDir),
                     "registry" => ApplyRegistry(patch),
                     "archive" => await ApplyArchive(patch, appDir),
+                    "download-extract" => await ApplyDownloadExtract(patch, appDir),
                     _ => new PatchResult
                     {
                         Success = false,
@@ -373,6 +375,128 @@ namespace SilentSetup.Services
                     Message = "Archive extraction error",
                     ErrorDetails = ex.Message
                 };
+            }
+        }
+
+        private async Task<PatchResult> ApplyDownloadExtract(PatchManifest patch, string appDir)
+        {
+            var backedUpFiles = new List<string>();
+            string? tempZipPath = null;
+            string? tempExtractDir = null;
+
+            try
+            {
+                if (patch.Download == null || string.IsNullOrWhiteSpace(patch.Download.Url))
+                {
+                    return new PatchResult
+                    {
+                        Success = false,
+                        Message = "No download URL specified"
+                    };
+                }
+
+                if (patch.Files == null || !patch.Files.Any())
+                {
+                    return new PatchResult
+                    {
+                        Success = false,
+                        Message = "No files specified for extraction"
+                    };
+                }
+
+                // Download ZIP file
+                _logger.Info($"Downloading from: {patch.Download.Url}");
+                tempZipPath = Path.Combine(Path.GetTempPath(), $"{patch.Id}_{Guid.NewGuid()}.zip");
+
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.Timeout = TimeSpan.FromMinutes(5);
+                    var response = await httpClient.GetAsync(patch.Download.Url);
+                    response.EnsureSuccessStatusCode();
+
+                    await using var fs = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await response.Content.CopyToAsync(fs);
+                }
+
+                _logger.Info($"Downloaded to: {tempZipPath}");
+
+                // Extract to temp directory
+                tempExtractDir = Path.Combine(Path.GetTempPath(), $"{patch.Id}_{Guid.NewGuid()}");
+                Directory.CreateDirectory(tempExtractDir);
+
+                _logger.Info($"Extracting to: {tempExtractDir}");
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempZipPath, tempExtractDir));
+
+                // Copy files from extracted archive to destinations
+                foreach (var file in patch.Files)
+                {
+                    var sourcePath = Path.Combine(tempExtractDir, file.Name);
+                    if (!File.Exists(sourcePath))
+                    {
+                        return new PatchResult
+                        {
+                            Success = false,
+                            Message = $"Extracted file not found: {file.Name}",
+                            BackedUpFiles = backedUpFiles
+                        };
+                    }
+
+                    var destPath = ResolvePath(file.Destination, appDir, patch.PatchDirectory);
+                    var destDir = Path.GetDirectoryName(destPath);
+                    if (!string.IsNullOrWhiteSpace(destDir))
+                    {
+                        Directory.CreateDirectory(destDir);
+                    }
+
+                    // Backup existing file
+                    if (file.Backup && File.Exists(destPath))
+                    {
+                        var backupPath = $"{destPath}.backup";
+                        _logger.Info($"Backing up: {destPath} -> {backupPath}");
+                        File.Copy(destPath, backupPath, overwrite: true);
+                        backedUpFiles.Add(backupPath);
+                    }
+
+                    // Copy file
+                    _logger.Info($"Copying: {sourcePath} -> {destPath}");
+                    File.Copy(sourcePath, destPath, file.Overwrite);
+                }
+
+                return new PatchResult
+                {
+                    Success = true,
+                    Message = $"Downloaded and copied {patch.Files.Count} file(s)",
+                    BackedUpFiles = backedUpFiles
+                };
+            }
+            catch (Exception ex)
+            {
+                return new PatchResult
+                {
+                    Success = false,
+                    Message = "Download-extract error",
+                    ErrorDetails = ex.Message,
+                    BackedUpFiles = backedUpFiles
+                };
+            }
+            finally
+            {
+                // Clean up temp files
+                try
+                {
+                    if (tempZipPath != null && File.Exists(tempZipPath))
+                    {
+                        File.Delete(tempZipPath);
+                    }
+                    if (tempExtractDir != null && Directory.Exists(tempExtractDir))
+                    {
+                        Directory.Delete(tempExtractDir, recursive: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn($"Failed to clean up temp files: {ex.Message}");
+                }
             }
         }
 
