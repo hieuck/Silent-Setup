@@ -233,16 +233,11 @@ namespace SilentSetup.Services
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(app.Install.InstallDir))
-                {
-                    return new InstallResult
-                    {
-                        Success = false,
-                        Message = "ZIP installation requires install_dir to be specified"
-                    };
-                }
+                // Default to Program Files if not specified
+                var targetDir = string.IsNullOrWhiteSpace(app.Install.InstallDir)
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), app.Name)
+                    : Environment.ExpandEnvironmentVariables(app.Install.InstallDir);
 
-                var targetDir = Environment.ExpandEnvironmentVariables(app.Install.InstallDir);
                 Directory.CreateDirectory(targetDir);
 
                 _logger.Info($"Extracting ZIP to: {targetDir}");
@@ -263,10 +258,13 @@ namespace SilentSetup.Services
 
                 _logger.Info("ZIP extraction complete");
 
+                // Create shortcuts
+                CreateShortcuts(app, targetDir);
+
                 return new InstallResult
                 {
                     Success = true,
-                    Message = "Portable app extracted successfully",
+                    Message = "Portable app extracted successfully with shortcuts",
                     ExitCode = 0
                 };
             }
@@ -344,6 +342,66 @@ namespace SilentSetup.Services
                     // TODO: Implement shortcut creation using IWshRuntimeLibrary
                 }
             }
+        }
+
+        private void CreateShortcuts(AppManifest app, string targetDir)
+        {
+            try
+            {
+                // Find main executable in target directory
+                var exeFiles = Directory.GetFiles(targetDir, "*.exe", SearchOption.AllDirectories);
+
+                if (exeFiles.Length == 0)
+                {
+                    _logger.Warn($"No executable found for shortcuts in {targetDir}");
+                    return;
+                }
+
+                // Use first exe or find by app name
+                var mainExe = exeFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(app.Name, StringComparison.OrdinalIgnoreCase))
+                           ?? exeFiles.First();
+
+                _logger.Info($"Creating shortcuts for: {mainExe}");
+
+                // Desktop shortcut
+                var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                var desktopShortcut = Path.Combine(desktopPath, $"{app.Name}.lnk");
+                CreateShortcutFile(mainExe, desktopShortcut);
+                _logger.Info($"Desktop shortcut created: {desktopShortcut}");
+
+                // Start Menu shortcut
+                var startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+                var startMenuShortcut = Path.Combine(startMenuPath, "Programs", $"{app.Name}.lnk");
+                Directory.CreateDirectory(Path.GetDirectoryName(startMenuShortcut)!);
+                CreateShortcutFile(mainExe, startMenuShortcut);
+                _logger.Info($"Start Menu shortcut created: {startMenuShortcut}");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to create shortcuts: {ex.Message}");
+            }
+        }
+
+        private void CreateShortcutFile(string targetPath, string shortcutPath)
+        {
+            // Use PowerShell to create shortcut (works without COM references)
+            var ps = $@"
+$WshShell = New-Object -ComObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut('{shortcutPath}')
+$Shortcut.TargetPath = '{targetPath}'
+$Shortcut.WorkingDirectory = '{Path.GetDirectoryName(targetPath)}'
+$Shortcut.Save()
+";
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{ps}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+
+            using var process = Process.Start(startInfo);
+            process?.WaitForExit(5000);
         }
     }
 }

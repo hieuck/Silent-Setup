@@ -1,0 +1,35 @@
+name: Mozilla Firefox
+id: firefox
+homepage: https://www.mozilla.org/firefox/
+
+download:
+  url: https://download.mozilla.org/?product=firefox-latest&os=win64&lang=en-US
+  checksum: ""
+  mirrors: []
+
+install:
+  type: exe
+  silent_args: /S
+  pre_install:
+    kill_processes:
+      - firefox.exe
+  post_install:
+    create_shortcuts: []
+
+detection:
+  method: both
+  registry:
+    - path: HKLM\SOFTWARE\Mozilla\Mozilla Firefox
+      value: CurrentVersion
+  file:
+    - path: C:\Program Files\Mozilla Firefox\firefox.exe
+
+metadata:
+  description: Free and open source web browser
+  publisher: Mozilla Foundation
+  category: Browser
+  license: MPL-2.0
+  tags:
+    - browser
+    - mozilla
+    - opensource

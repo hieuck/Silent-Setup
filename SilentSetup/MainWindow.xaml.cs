@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Newtonsoft.Json;
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
     private readonly DownloadService _downloadService;
     private readonly InstallService _installService;
     private readonly PatchService _patchService;
+    private readonly RemoteManifestService _remoteManifestService;
     private readonly AppConfig _config;
 
     private List<AppManifest> _apps = new();
@@ -36,6 +38,7 @@ public partial class MainWindow : Window
 
         // Initialize services
         _logger = new LoggerService();
+        _remoteManifestService = new RemoteManifestService(_logger);
         _manifestLoader = new ManifestLoader(_logger);
         _detectionService = new DetectionService(_logger);
         _downloadService = new DownloadService(_logger, _config);
@@ -72,16 +75,37 @@ public partial class MainWindow : Window
     {
         await LoadManifests();
         BuildUI();
+        RefreshLogs();
     }
 
     private async Task LoadManifests()
     {
         StatusText.Text = "Loading manifests...";
 
+        // Check and update cache if needed
+        if (_remoteManifestService.IsCacheStale())
+        {
+            StatusText.Text = "Updating manifest cache from GitHub...";
+            var updated = await _remoteManifestService.UpdateCacheAsync();
+            if (updated)
+            {
+                _logger.Info("Cache updated successfully from GitHub");
+            }
+            else
+            {
+                _logger.Warn("Failed to update cache, using existing cache");
+            }
+        }
+
         await Task.Run(() =>
         {
-            _apps = _manifestLoader.LoadApps();
-            _patches = _manifestLoader.LoadPatches();
+            var cacheDir = _remoteManifestService.GetCacheDirectory();
+            _apps = _manifestLoader.LoadApps(cacheDir);
+
+            // Load patches from cache/patches subfolder
+            var patchesDir = Path.Combine(cacheDir, "patches");
+            _patches = _manifestLoader.LoadPatches(patchesDir);
+
             _detectionService.RefreshAllApps(_apps);
         });
 
@@ -448,8 +472,23 @@ public partial class MainWindow : Window
 
     private void AddAppButton_Click(object sender, RoutedEventArgs e)
     {
-        var addAppWindow = new AddAppWindow();
-        if (addAppWindow.ShowDialog() == true)
+        var result = MessageBox.Show(
+            "Chọn cách thêm ứng dụng:\n\n" +
+            "YES - Wizard (Tự động tìm và điền thông tin)\n" +
+            "NO - Manual (Nhập thủ công tất cả thông tin)\n" +
+            "CANCEL - Hủy bỏ",
+            "Thêm Ứng dụng",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question);
+
+        Window? dialog = result switch
+        {
+            MessageBoxResult.Yes => new AddAppWizard(),
+            MessageBoxResult.No => new AddAppWindow(),
+            _ => null
+        };
+
+        if (dialog?.ShowDialog() == true)
         {
             // Refresh to show new app
             _ = LoadManifests();
@@ -468,35 +507,78 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ViewLogsButton_Click(object sender, RoutedEventArgs e)
+    private void ToggleLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (LogPanelColumn.Width.Value > 0)
+        {
+            // Hide log panel
+            LogPanelColumn.Width = new GridLength(0);
+            LogSplitter.Visibility = Visibility.Collapsed;
+            LogPanel.Visibility = Visibility.Collapsed;
+            ToggleLogsButton.Content = "Logs ❮";
+        }
+        else
+        {
+            // Show log panel
+            LogPanelColumn.Width = new GridLength(400);
+            LogSplitter.Visibility = Visibility.Visible;
+            LogPanel.Visibility = Visibility.Visible;
+            ToggleLogsButton.Content = "Logs ❯";
+            RefreshLogs();
+        }
+    }
+
+    private void RefreshLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshLogs();
+    }
+
+    private void ClearLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        LogTextBlock.Text = "";
+    }
+
+    private void OpenLogsFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            if (Directory.Exists(logsDir))
+            {
+                Process.Start("explorer.exe", logsDir);
+            }
+            else
+            {
+                MessageBox.Show("Logs folder not found.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open logs folder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void HideLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        LogPanelColumn.Width = new GridLength(0);
+        LogSplitter.Visibility = Visibility.Collapsed;
+        LogPanel.Visibility = Visibility.Collapsed;
+        ToggleLogsButton.Content = "Logs ❮";
+    }
+
+    private void RefreshLogs()
     {
         try
         {
             var logs = _logger.GetTodayLogs();
-            var logText = string.Join(Environment.NewLine, logs);
+            LogTextBlock.Text = string.Join(Environment.NewLine, logs);
 
-            var window = new Window
-            {
-                Title = "Logs",
-                Width = 800,
-                Height = 600,
-                Content = new ScrollViewer
-                {
-                    Content = new TextBox
-                    {
-                        Text = logText,
-                        IsReadOnly = true,
-                        FontFamily = new System.Windows.Media.FontFamily("Consolas"),
-                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-                    }
-                }
-            };
-            window.ShowDialog();
+            // Auto-scroll to bottom
+            LogScrollViewer.ScrollToEnd();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to load logs: {ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            LogTextBlock.Text = $"Failed to load logs: {ex.Message}";
         }
     }
 

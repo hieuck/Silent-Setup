@@ -73,6 +73,32 @@ namespace SilentSetup.Services
                 return patches;
             }
 
+            // Support both folder structure (local) and flat YAML files (remote cache)
+            // 1. Check for flat YAML files first (remote cache format)
+            var yamlFiles = Directory.GetFiles(patchesDirectory, "*.yaml")
+                .Concat(Directory.GetFiles(patchesDirectory, "*.yml"))
+                .Where(f => !Path.GetFileName(f).StartsWith("_"));
+
+            foreach (var file in yamlFiles)
+            {
+                try
+                {
+                    var yaml = File.ReadAllText(file);
+                    var manifest = _yamlDeserializer.Deserialize<PatchManifest>(yaml);
+
+                    if (ValidatePatchManifest(manifest))
+                    {
+                        patches.Add(manifest);
+                        _logger.Info($"Loaded patch manifest: {manifest.Name} ({manifest.Id}) for {manifest.TargetApp}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Failed to load patch from {file}: {ex.Message}");
+                }
+            }
+
+            // 2. Check for folder structure (local format)
             var patchDirs = Directory.GetDirectories(patchesDirectory)
                 .Where(d => !Path.GetFileName(d).StartsWith("_")); // Skip templates
 
@@ -148,7 +174,7 @@ namespace SilentSetup.Services
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(manifest.Install.SilentArgs))
+            if (string.IsNullOrWhiteSpace(manifest.Install.SilentArgs) && manifest.Install.Type != "zip")
             {
                 _logger.Error($"App manifest {manifest.Name} missing required field: install.silent_args");
                 return false;

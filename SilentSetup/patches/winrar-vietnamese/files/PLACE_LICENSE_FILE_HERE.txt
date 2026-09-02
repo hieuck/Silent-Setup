@@ -1,0 +1,24 @@
+HƯỚNG DẪN: Đặt file license WinRAR vào đây (tùy chọn)
+
+File license: rarreg.key
+
+Cách sử dụng:
+1. Nếu bạn đã mua license WinRAR, bạn sẽ nhận được file rarreg.key
+2. Đặt file rarreg.key vào thư mục này
+3. Khi cài đặt WinRAR với patch Việt hóa, license sẽ được tự động copy
+
+Sau khi đặt file, cấu trúc thư mục sẽ như sau:
+patches/winrar-vietnamese/files/
+├── PLACE_LANGUAGE_FILE_HERE.txt
+├── PLACE_LICENSE_FILE_HERE.txt (file này)
+├── winrar_vi.lng (file ngôn ngữ - bắt buộc)
+└── rarreg.key (file license - tùy chọn)
+
+Lưu ý:
+- File license là TÙY CHỌN (không bắt buộc)
+- Nếu không có license, WinRAR vẫn hoạt động ở chế độ trial 40 ngày
+- File phải có tên chính xác: rarreg.key
+- Không chia sẻ file license trên internet (vi phạm bản quyền)
+- Mua license chính thức tại: https://www.win-rar.com/buy-winrar.html
+
+Mục đích: Tự động kích hoạt WinRAR sau khi cài đặt

@@ -1,0 +1,47 @@
+name: Your Patch Name
+id: your-patch-id
+target_app: target-app-id  # App ID from apps/*.yaml
+
+compatibility:
+  app_versions:
+    - "*"  # All versions, or specify like "1.0.*"
+
+type: copy-files  # copy-files | executable | registry | archive
+
+# For copy-files type:
+files:
+  - name: file-in-files-folder.dll
+    destination: "{app_dir}/"
+    backup: true
+
+# For executable type:
+# execute:
+#   file: patcher.exe
+#   args: ["--silent"]
+#   working_dir: "{app_dir}"
+#   run_as_admin: true
+
+# For registry type:
+# registry:
+#   - action: set
+#     root: HKLM
+#     path: "SOFTWARE\\Company\\App"
+#     name: ValueName
+#     value: ValueData
+#     type: string
+
+# For archive type:
+# archive:
+#   file: plugin.zip
+#   extract_to: "{app_dir}/plugins/"
+
+metadata:
+  category: Plugin  # Language Pack | Plugin | Theme | Crack | Fix
+  author: Your Name
+  version: 1.0.0
+  description: What this patch does
+  last_updated: 2026-09-01
+
+security:
+  risk_level: low  # low | medium | high
+  warning: "Optional custom warning message"

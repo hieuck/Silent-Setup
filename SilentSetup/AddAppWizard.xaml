@@ -1,0 +1,166 @@
+<Window x:Class="SilentSetup.AddAppWizard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Thêm App - Wizard" Height="600" Width="800"
+        WindowStartupLocation="CenterOwner"
+        Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Thêm Ứng dụng - Wizard" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <!-- Progress Steps -->
+        <Border Grid.Row="1" BorderBrush="#BDC3C7" BorderThickness="0,0,0,1" Padding="0,10,0,15" Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Ellipse x:Name="Step1Circle" Width="30" Height="30" Fill="#3498DB"/>
+                    <TextBlock x:Name="Step1Text" Text="Tìm kiếm" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Ellipse x:Name="Step2Circle" Width="30" Height="30" Fill="#BDC3C7"/>
+                    <TextBlock x:Name="Step2Text" Text="Chọn app" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="Gray"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Ellipse x:Name="Step3Circle" Width="30" Height="30" Fill="#BDC3C7"/>
+                    <TextBlock x:Name="Step3Text" Text="Tùy chỉnh" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="Gray"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Ellipse x:Name="Step4Circle" Width="30" Height="30" Fill="#BDC3C7"/>
+                    <TextBlock x:Name="Step4Text" Text="Hoàn tất" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="Gray"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content Area -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#BDC3C7" BorderThickness="1" Padding="20">
+            <Grid>
+                <!-- Step 1: Search -->
+                <Grid x:Name="Step1Panel">
+                <StackPanel>
+                    <TextBlock Text="Tìm kiếm ứng dụng" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Nhập tên phần mềm hoặc URL trang chủ:" Margin="0,0,0,5"/>
+                    <TextBox x:Name="SearchTextBox" Height="35" FontSize="14" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Ví dụ: 'VLC', '7-Zip', 'https://notepad-plus-plus.org'"
+                               Foreground="Gray" FontSize="11" Margin="0,0,0,20"/>
+
+                    <Button x:Name="SearchButton" Content="Tìm kiếm" Width="150" Height="40"
+                            Background="#3498DB" Foreground="White" FontSize="14" FontWeight="Bold"
+                            Click="SearchButton_Click" HorizontalAlignment="Left"/>
+
+                    <TextBlock x:Name="SearchStatusText" Text="" Margin="0,20,0,0" Foreground="Gray"/>
+
+                    <Border x:Name="SearchInfoPanel" Background="#ECF0F1"
+                            BorderBrush="#BDC3C7" BorderThickness="1" Padding="15" Margin="0,20,0,0">
+                        <StackPanel>
+                            <TextBlock Text="💡 Wizard sẽ tìm kiếm từ:" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="• Chocolatey packages (3000+ apps)" Margin="0,0,0,3"/>
+                            <TextBlock Text="• Winget manifests (5000+ apps)" Margin="0,0,0,3"/>
+                            <TextBlock Text="• Trang chủ phần mềm (nếu là URL)" Margin="0,0,0,3"/>
+                            <TextBlock Text="" Margin="0,10,0,0"/>
+                            <TextBlock Text="Thông tin tự động lấy được:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBlock Text="✓ Link download trực tiếp" Margin="0,0,0,3"/>
+                            <TextBlock Text="✓ Silent install arguments" Margin="0,0,0,3"/>
+                            <TextBlock Text="✓ Tên, mô tả, nhà phát hành" Margin="0,0,0,3"/>
+                            <TextBlock Text="✓ Phương thức detect đã cài" Margin="0,0,0,3"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- Step 2: Select -->
+            <Grid x:Name="Step2Panel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Chọn ứng dụng phù hợp" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ResultsPanel">
+                        <!-- Results will be added here dynamically -->
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Step 3: Customize -->
+            <ScrollViewer x:Name="Step3Panel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Kiểm tra và tùy chỉnh thông tin" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Tên hiển thị:"/>
+                    <TextBox x:Name="FinalNameTextBox" Height="30" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="ID:"/>
+                    <TextBox x:Name="FinalIdTextBox" Height="30" Margin="0,5,0,10" IsReadOnly="True" Background="#E0E0E0"/>
+
+                    <TextBlock Text="Download URL:"/>
+                    <TextBox x:Name="FinalDownloadTextBox" Height="30" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="Silent arguments:"/>
+                    <TextBox x:Name="FinalSilentArgsTextBox" Height="30" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="Installer type:"/>
+                    <ComboBox x:Name="FinalTypeComboBox" Height="30" Margin="0,5,0,10" SelectedIndex="0">
+                        <ComboBoxItem Content="exe"/>
+                        <ComboBoxItem Content="msi"/>
+                        <ComboBoxItem Content="zip"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Mô tả:"/>
+                    <TextBox x:Name="FinalDescriptionTextBox" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="Nguồn thông tin:" Foreground="Gray" FontSize="11" Margin="0,10,0,5"/>
+                    <TextBlock x:Name="SourceInfoText" Foreground="Gray" FontSize="11"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 4: Finish -->
+            <Grid x:Name="Step4Panel" Visibility="Collapsed">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="✓" FontSize="72" Foreground="#27AE60" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                    <TextBlock Text="Hoàn tất!" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="FinishMessageText" Text="Đã tạo manifest cho ứng dụng."
+                               HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                    <TextBlock Text="App manifest đã được lưu vào thư mục apps/"
+                               Foreground="Gray" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Navigation Buttons -->
+        <Border Grid.Row="3" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="0,15,0,0" Margin="0,15,0,0">
+            <Grid>
+                <Button x:Name="BackButton" Content="← Quay lại" Width="100" Height="35"
+                        HorizontalAlignment="Left" Click="BackButton_Click" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="NextButton" Content="Tiếp theo →" Width="120" Height="35"
+                            Margin="0,0,10,0" Click="NextButton_Click" Visibility="Collapsed"/>
+                    <Button x:Name="FinishButton" Content="Hoàn tất" Width="120" Height="35"
+                            Margin="0,0,10,0" Click="FinishButton_Click" Visibility="Collapsed"
+                            Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+                    <Button Content="Đóng" Width="100" Height="35" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
