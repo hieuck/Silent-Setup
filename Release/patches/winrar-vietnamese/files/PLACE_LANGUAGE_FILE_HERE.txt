@@ -1,0 +1,20 @@
+HƯỚNG DẪN: Đặt file ngôn ngữ WinRAR vào đây
+
+File cần thiết: winrar_vi.lng
+
+Cách tải:
+1. Truy cập: https://www.win-rar.com/downld.html?&L=9
+2. Tìm mục "Language files"
+3. Chọn "Vietnamese"
+4. Download file winrar_vi.lng
+5. Đặt file vào thư mục này (cùng với file PLACE_LANGUAGE_FILE_HERE.txt)
+
+Sau khi đặt file, cấu trúc thư mục sẽ như sau:
+patches/winrar-vietnamese/files/
+├── PLACE_LANGUAGE_FILE_HERE.txt (file này)
+└── winrar_vi.lng (file bạn tải về)
+
+Lưu ý:
+- File phải có tên chính xác: winrar_vi.lng
+- Không đổi tên file
+- File khoảng 200-300 KB

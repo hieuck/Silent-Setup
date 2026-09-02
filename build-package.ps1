@@ -18,40 +18,34 @@ Write-Host "✓ Clean complete" -ForegroundColor Green
 # 2. Build Release
 Write-Host ""
 Write-Host "[2/5] Building Release..." -ForegroundColor Yellow
-Set-Location .\SilentSetup
-dotnet publish -c Release -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish .\SilentSetup\SilentSetup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\Release
 if ($LASTEXITCODE -ne 0) {
     Write-Host "✗ Build failed!" -ForegroundColor Red
     exit 1
 }
-Set-Location ..
 Write-Host "✓ Build complete" -ForegroundColor Green
 
 # 3. Create Release directory structure
 Write-Host ""
 Write-Host "[3/5] Creating package structure..." -ForegroundColor Yellow
-New-Item -ItemType Directory -Path "Release\SilentSetup" -Force | Out-Null
-
-# Copy executable
-Copy-Item ".\SilentSetup\bin\Release\net8.0-windows\win-x64\publish\SilentSetup.exe" "Release\SilentSetup\"
 
 # Copy configuration and directories
-Copy-Item "config.json" "Release\SilentSetup\" -ErrorAction SilentlyContinue
-Copy-Item "apps" "Release\SilentSetup\" -Recurse -Force
-Copy-Item "patches" "Release\SilentSetup\" -Recurse -Force
-Copy-Item "docs" "Release\SilentSetup\" -Recurse -Force
-Copy-Item "README.md" "Release\SilentSetup\" -Force
+if (Test-Path "config.json") { Copy-Item "config.json" "Release\" -Force }
+Copy-Item "apps" "Release\" -Recurse -Force
+Copy-Item "patches" "Release\" -Recurse -Force
+Copy-Item "docs" "Release\" -Recurse -Force
+Copy-Item "README.md" "Release\" -Force
 
-# Create empty directories
-New-Item -ItemType Directory -Path "Release\SilentSetup\cache" -Force | Out-Null
-New-Item -ItemType Directory -Path "Release\SilentSetup\logs" -Force | Out-Null
+# Create empty directories if they don't exist
+if (-not (Test-Path "Release\cache")) { New-Item -ItemType Directory -Path "Release\cache" -Force | Out-Null }
+if (-not (Test-Path "Release\logs")) { New-Item -ItemType Directory -Path "Release\logs" -Force | Out-Null }
 
 Write-Host "✓ Package structure created" -ForegroundColor Green
 
 # 4. Get version and file info
 Write-Host ""
 Write-Host "[4/5] Gathering info..." -ForegroundColor Yellow
-$exePath = "Release\SilentSetup\SilentSetup.exe"
+$exePath = "Release\SilentSetup.exe"
 $fileSize = [math]::Round((Get-Item $exePath).Length / 1MB, 2)
 $fileHash = (Get-FileHash $exePath -Algorithm SHA256).Hash
 
@@ -62,9 +56,30 @@ Write-Host "  SHA256: $fileHash" -ForegroundColor Cyan
 # 5. Create ZIP package
 Write-Host ""
 Write-Host "[5/5] Creating ZIP package..." -ForegroundColor Yellow
+
+# Create a temp folder for packaging
+$tempPackage = "Release\SilentSetup"
+New-Item -ItemType Directory -Path $tempPackage -Force | Out-Null
+
+# Copy everything to temp folder
+Copy-Item "Release\SilentSetup.exe" "$tempPackage\"
+Copy-Item "Release\apps" "$tempPackage\" -Recurse -Force
+Copy-Item "Release\patches" "$tempPackage\" -Recurse -Force
+Copy-Item "Release\docs" "$tempPackage\" -Recurse -Force
+Copy-Item "Release\README.md" "$tempPackage\" -Force
+if (Test-Path "Release\config.json") { Copy-Item "Release\config.json" "$tempPackage\" }
+New-Item -ItemType Directory -Path "$tempPackage\cache" -Force | Out-Null
+New-Item -ItemType Directory -Path "$tempPackage\logs" -Force | Out-Null
+
+# Create ZIP from temp folder
 $zipPath = "Release\SilentSetup-v1.0-win64.zip"
-Compress-Archive -Path "Release\SilentSetup\*" -DestinationPath $zipPath -Force
+if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+Compress-Archive -Path "$tempPackage\*" -DestinationPath $zipPath -Force
 $zipSize = [math]::Round((Get-Item $zipPath).Length / 1MB, 2)
+
+# Clean up temp folder
+Remove-Item $tempPackage -Recurse -Force
+
 Write-Host "✓ Package created: $zipPath ($zipSize MB)" -ForegroundColor Green
 
 # Summary
@@ -74,11 +89,11 @@ Write-Host "Build Complete!" -ForegroundColor Green
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Distribution files:" -ForegroundColor White
-Write-Host "  → Release\SilentSetup\" -ForegroundColor Yellow
-Write-Host "  → $zipPath" -ForegroundColor Yellow
+Write-Host "  → Release\SilentSetup.exe (standalone)" -ForegroundColor Yellow
+Write-Host "  → $zipPath (full package)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
-Write-Host "  1. Test the executable in Release\SilentSetup\" -ForegroundColor Gray
+Write-Host "  1. Test the executable in Release\" -ForegroundColor Gray
 Write-Host "  2. Create GitHub release" -ForegroundColor Gray
 Write-Host "  3. Upload $zipPath as release asset" -ForegroundColor Gray
 Write-Host ""
