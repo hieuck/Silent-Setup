@@ -1,160 +1,194 @@
 # Silent Setup
 
-Ứng dụng Windows tự động cài đặt phần mềm miễn phí với chế độ silent (không cần tương tác). Hỗ trợ patch Việt hóa và plugin mở rộng.
+Ứng dụng Windows tự động cài đặt phần mềm miễn phí với chế độ silent (im lặng), hỗ trợ patch Việt hóa và plugin.
 
 ## Tính năng
 
-- ✅ **Cài đặt Silent**: Tự động cài đặt phần mềm không cần can thiệp
-- ✅ **Patch System**: Hỗ trợ Việt hóa, plugin, và các bản vá tùy chỉnh
-- ✅ **Phát hiện tự động**: Kiểm tra phần mềm đã cài, phiên bản hiện tại
-- ✅ **Download Manager**: Tải xuống với progress bar, checksum verification, resume capability
-- ✅ **Portable**: Không cần cài đặt, chạy trực tiếp file .exe
-- ✅ **Tùy biến dễ dàng**: Thêm app/patch qua file YAML, không cần lập trình
+✅ **Cài đặt tự động**: Cài đặt hàng loạt phần mềm mà không cần tương tác  
+✅ **Phát hiện thông minh**: Tự động phát hiện phần mềm đã cài đặt  
+✅ **Patch & Plugin**: Hỗ trợ Việt hóa, plugin, và các bản vá  
+✅ **Portable**: Không cần cài đặt, chạy trực tiếp file .exe  
+✅ **Dễ mở rộng**: Thêm app mới qua giao diện hoặc file YAML  
+✅ **Tìm kiếm & Lọc**: Tìm kiếm theo tên, category, publisher  
+✅ **100% Miễn phí**: Mã nguồn mở
 
 ## Yêu cầu hệ thống
 
 - Windows 10/11 (64-bit)
-- .NET 8 Runtime (tự động có trong bản single-file)
-- Quyền Administrator (để cài đặt phần mềm)
+- .NET 8 Runtime (ứng dụng sẽ tự nhắc cài nếu thiếu)
+
+## Cách sử dụng
+
+### Bước 1: Tải về
+
+1. Tải file `SilentSetup-v1.0.zip` từ [Releases](../../releases)
+2. Giải nén vào thư mục bất kỳ
+
+### Bước 2: Chạy ứng dụng
+
+1. Mở thư mục vừa giải nén
+2. Double-click `SilentSetup.exe`
+3. Giao diện chính sẽ hiện ra với danh sách phần mềm
+
+### Bước 3: Cài đặt phần mềm
+
+1. **Tìm kiếm**: Gõ tên phần mềm vào ô tìm kiếm
+2. **Lọc**: Chọn category (Browser, Development, Media, Utility)
+3. **Chọn app**: Tick vào các ứng dụng muốn cài
+4. **Chọn patch** (tùy chọn): Tick vào bản Việt hóa hoặc plugin bên dưới tên app
+5. **Cài đặt**: Click nút "Cài đặt đã chọn"
+6. Chờ quá trình hoàn tất (thanh progress bar sẽ hiển thị tiến độ)
+
+### Chức năng khác
+
+- **Refresh**: Làm mới danh sách và kiểm tra app đã cài
+- **Select All/Deselect All**: Chọn/bỏ chọn tất cả
+- **Chuột phải vào app**: Chỉnh sửa, xóa, xem chi tiết, mở trang chủ
+- **Thêm App**: Click nút "+" để thêm app mới qua giao diện
+- **View Logs**: Xem nhật ký cài đặt
+
+## Thêm phần mềm mới
+
+### Cách 1: Qua giao diện (Dễ nhất)
+
+1. Click nút **"+ Thêm App"**
+2. Điền thông tin:
+   - **Tên**: Tên hiển thị (VD: Google Chrome)
+   - **ID**: Tên không dấu (VD: google-chrome)
+   - **Website**: Trang chủ chính thức
+   - **Link download**: Link trực tiếp file cài đặt (bắt buộc HTTPS)
+   - **Loại installer**: exe / msi / zip
+   - **Silent args**: Tham số cài đặt im lặng (VD: /S, /silent)
+   - **Registry key**: Đường dẫn registry để phát hiện (VD: HKLM\SOFTWARE\AppName)
+   - **Hoặc đường dẫn file**: File .exe sau khi cài (VD: C:\Program Files\App\app.exe)
+3. Click **Lưu**
+
+### Cách 2: Tạo file YAML thủ công
+
+Tạo file mới trong thư mục `apps/` với tên `app-id.yaml`:
+
+```yaml
+name: Google Chrome
+id: google-chrome
+homepage: https://www.google.com/chrome/
+
+download:
+  url: https://dl.google.com/chrome/install/latest/chrome_installer.exe
+
+install:
+  type: exe
+  silent_args: /silent /install
+
+detection:
+  method: both
+  registry:
+    - path: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe
+  file:
+    - path: C:\Program Files\Google\Chrome\Application\chrome.exe
+
+metadata:
+  category: Browser
+  publisher: Google LLC
+  description: Trình duyệt web nhanh và an toàn
+```
+
+Xem thêm mẫu trong `apps/_template.yaml`
+
+## Thêm Patch / Việt hóa
+
+1. Tạo thư mục mới trong `patches/` (VD: `patches/chrome-vietnamese/`)
+2. Tạo file `manifest.yaml`:
+
+```yaml
+name: Chrome Tiếng Việt
+target_app: google-chrome
+
+patches:
+  - type: copy-files
+    description: Copy language pack
+    files:
+      - source: vi.pak
+        destination: '{app_dir}\Locales\vi.pak'
+```
+
+3. Đặt file patch vào thư mục `files/` (VD: `patches/chrome-vietnamese/files/vi.pak`)
+
+Xem thêm: `docs/PATCH_MANIFEST_SPEC.md`
 
 ## Cấu trúc thư mục
 
 ```
-Silent-Setup/
-├── SilentSetup.exe          # Ứng dụng chính
-├── config.json              # Cấu hình download, install
-├── apps/                    # App manifests (YAML)
-│   ├── chrome.yaml
-│   ├── firefox.yaml
-│   ├── vscode.yaml
+SilentSetup/
+├── SilentSetup.exe          # File chương trình chính
+├── apps/                    # Định nghĩa các phần mềm
+│   ├── google-chrome.yaml
 │   ├── vlc.yaml
-│   ├── 7zip.yaml
-│   ├── notepadplusplus.yaml
-│   └── _template.yaml       # Template để thêm app mới
-├── patches/                 # Patch manifests
+│   └── _template.yaml       # Mẫu để tạo app mới
+├── patches/                 # Các bản patch
 │   └── _template/
-│       ├── manifest.yaml    # Template patch manifest
-│       └── files/           # Đặt file patch vào đây
-├── cache/                   # Download cache (tự động tạo)
-├── logs/                    # Log files (tự động tạo)
-└── docs/                    # Tài liệu
-    ├── ARCHITECTURE.md
-    ├── APP_MANIFEST_SPEC.md
-    ├── PATCH_MANIFEST_SPEC.md
-    └── USER_GUIDE.md
+│       ├── manifest.yaml
+│       └── files/
+├── cache/                   # File download tạm (tự động tạo)
+├── logs/                    # Nhật ký hoạt động (tự động tạo)
+└── config.json             # Cấu hình ứng dụng
 ```
 
-## Hướng dẫn sử dụng
+## Cấu hình nâng cao
 
-### 1. Chạy ứng dụng
+Chỉnh sửa file `config.json`:
 
-Chỉ cần double-click `SilentSetup.exe` - không cần cài đặt.
-
-### 2. Cài đặt phần mềm
-
-1. Chọn các ứng dụng muốn cài (checkbox)
-2. Chọn patches nếu có (Việt hóa, plugin)
-3. Click nút **Cài đặt đã chọn**
-4. Ứng dụng tự động:
-   - Tải xuống từ trang chủ chính thức
-   - Kiểm tra checksum (nếu có)
-   - Cài đặt silent
-   - Áp dụng patches đã chọn
-
-### 3. Thêm ứng dụng mới
-
-Copy `apps/_template.yaml` thành file mới và chỉnh sửa:
-
-```yaml
-name: Tên App
-id: app-id
-homepage: https://...
-
-download:
-  url: https://...
-  
-install:
-  type: exe  # exe, msi, zip
-  silent_args: /S
-  
-detection:
-  method: both  # registry, file, both
-  registry:
-    - key: HKLM\SOFTWARE\...
-      value: Version
-  file:
-    path: C:\Program Files\...\app.exe
+```json
+{
+  "download": {
+    "cache_directory": "cache",
+    "timeout_seconds": 300,
+    "max_retries": 3
+  },
+  "install": {
+    "default_timeout": 600,
+    "verify_checksum": true
+  }
+}
 ```
 
-Chi tiết xem: `docs/APP_MANIFEST_SPEC.md`
+## Các phần mềm được hỗ trợ sẵn
 
-### 4. Thêm patch
+- **Browser**: Google Chrome, Mozilla Firefox
+- **Development**: Visual Studio Code, Notepad++
+- **Media**: VLC Media Player
+- **Utility**: 7-Zip
 
-1. Tạo thư mục mới trong `patches/` (ví dụ: `patches/vscode-vietnamese/`)
-2. Tạo `manifest.yaml` (xem `patches/_template/manifest.yaml`)
-3. Đặt file patch vào `files/` subdirectory
-4. Patch sẽ tự động xuất hiện trong UI
+## Khắc phục sự cố
 
-Chi tiết xem: `docs/PATCH_MANIFEST_SPEC.md`
+### "App không tải được"
+- Kiểm tra kết nối internet
+- Xem logs trong `logs/YYYY-MM-DD.log`
+- Click **View Logs** để xem chi tiết lỗi
 
-## Ứng dụng mẫu có sẵn
+### "Cài đặt thất bại"
+- Chạy ứng dụng với quyền Administrator (chuột phải → Run as administrator)
+- Kiểm tra antivirus có chặn không
+- Đảm bảo đủ dung lượng ổ cứng
 
-- **Google Chrome** - Trình duyệt web
-- **Mozilla Firefox** - Trình duyệt web
-- **Visual Studio Code** - Code editor
-- **VLC Media Player** - Media player
-- **7-Zip** - File archiver
-- **Notepad++** - Text editor
+### "Không phát hiện app đã cài"
+- Click **Refresh** để làm mới
+- Kiểm tra đường dẫn registry/file trong manifest có đúng không
+- Một số app cài vào thư mục khác với mặc định
 
-## Công nghệ sử dụng
+## Hỗ trợ
 
-- **.NET 8** - Framework
-- **WPF** - User interface
-- **YamlDotNet** - YAML parsing
-- **C# 10** - Programming language
-
-## Phát triển
-
-### Build từ source
-
-```powershell
-cd SilentSetup
-dotnet build
-```
-
-### Tạo single-file executable
-
-```powershell
-dotnet publish -c Release -r win-x64 --self-contained /p:PublishSingleFile=true
-```
-
-Output: `publish/SilentSetup.exe` (~72 MB)
-
-### Chạy từ source
-
-```powershell
-cd SilentSetup
-dotnet run
-```
-
-## Tài liệu
-
-- [Hướng dẫn sử dụng](docs/USER_GUIDE.md) (Tiếng Việt)
-- [Architecture](docs/ARCHITECTURE.md)
-- [App Manifest Specification](docs/APP_MANIFEST_SPEC.md)
-- [Patch Manifest Specification](docs/PATCH_MANIFEST_SPEC.md)
-
-## Bảo mật
-
-- Chỉ download từ HTTPS
-- SHA256 checksum verification
-- Registry/file patches cần quyền Administrator
-- Risk level warning cho patches nguy hiểm
+- **Issues**: [GitHub Issues](../../issues)
+- **Tài liệu đầy đủ**: Xem thư mục `docs/`
+  - `USER_GUIDE.md` - Hướng dẫn chi tiết
+  - `APP_MANIFEST_SPEC.md` - Định dạng file app
+  - `PATCH_MANIFEST_SPEC.md` - Định dạng patch
+  - `ARCHITECTURE.md` - Kiến trúc hệ thống
 
 ## License
 
-MIT License - Free for personal and commercial use.
+MIT License - Sử dụng tự do cho mọi mục đích
 
-## Tác giả
+## Credits
 
-Created with Claude Code (Anthropic).
+Phát triển bởi [Your Name]  
+Powered by .NET 8 & WPF

@@ -1,0 +1,29 @@
+name: WinRAR
+id: winrar
+homepage: https://www.win-rar.com/
+
+download:
+  url: https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-701.exe
+
+install:
+  type: exe
+  silent_args: /S
+  timeout: 180
+
+detection:
+  method: both
+  registry:
+    - path: HKLM\SOFTWARE\WinRAR
+  file:
+    - path: C:\Program Files\WinRAR\WinRAR.exe
+
+metadata:
+  category: Utility
+  publisher: win.rar GmbH
+  license: Shareware (40-day trial)
+  description: Công cụ nén và giải nén file mạnh mẽ với hỗ trợ RAR, ZIP và nhiều định dạng khác
+  tags:
+    - compression
+    - archiver
+    - rar
+    - zip

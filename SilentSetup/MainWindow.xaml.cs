@@ -158,6 +158,20 @@ public partial class MainWindow : Window
     private void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
         BuildUI();
+
+        // Show/hide clear button
+        if (ClearSearchButton != null)
+        {
+            ClearSearchButton.Visibility = string.IsNullOrEmpty(SearchTextBox.Text)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+    }
+
+    private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        SearchTextBox.Text = "";
+        SearchTextBox.Focus();
     }
 
     private void CategoryFilterComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -432,18 +446,23 @@ public partial class MainWindow : Window
         BuildUI();
     }
 
-    private void SettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        MessageBox.Show("Settings dialog not implemented yet.", "Settings",
-            MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
     private void AddAppButton_Click(object sender, RoutedEventArgs e)
     {
         var addAppWindow = new AddAppWindow();
         if (addAppWindow.ShowDialog() == true)
         {
             // Refresh to show new app
+            _ = LoadManifests();
+            BuildUI();
+        }
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var settingsWindow = new SettingsWindow(_patches);
+        if (settingsWindow.ShowDialog() == true)
+        {
+            // Refresh patches if any changes were made
             _ = LoadManifests();
             BuildUI();
         }
@@ -482,30 +501,31 @@ public partial class MainWindow : Window
     }
 
     // Context menu handlers
-    private void EditApp(AppManifest app)
+    private async void EditApp(AppManifest app)
     {
         try
         {
             var appsDir = Path.Combine(Directory.GetCurrentDirectory(), "apps");
             var filePath = Path.Combine(appsDir, $"{app.Id}.yaml");
 
-            if (File.Exists(filePath))
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = filePath,
-                    UseShellExecute = true
-                });
-            }
-            else
+            if (!File.Exists(filePath))
             {
                 MessageBox.Show($"Không tìm thấy file: {filePath}", "Lỗi",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var editWindow = new EditAppWindow(app, filePath);
+            if (editWindow.ShowDialog() == true)
+            {
+                // Refresh to show updated app
+                await LoadManifests();
+                BuildUI();
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Không thể mở file: {ex.Message}", "Lỗi",
+            MessageBox.Show($"Không thể chỉnh sửa app: {ex.Message}", "Lỗi",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

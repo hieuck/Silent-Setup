@@ -1,163 +1,167 @@
+using System;
 using System.IO;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using SilentSetup.Models;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
-namespace SilentSetup;
-
-public partial class AddAppWindow : Window
+namespace SilentSetup
 {
-    public AddAppWindow()
+    public partial class AddAppWindow : Window
     {
-        InitializeComponent();
-    }
-
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Validate required fields
-        if (string.IsNullOrWhiteSpace(NameTextBox.Text))
+        public AddAppWindow()
         {
-            MessageBox.Show("Vui lòng nhập tên ứng dụng.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            InitializeComponent();
         }
 
-        if (string.IsNullOrWhiteSpace(IdTextBox.Text))
+        private void IdTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            MessageBox.Show("Vui lòng nhập ID.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            // Auto-normalize ID: lowercase, replace spaces with hyphens, remove special chars
+            var text = IdTextBox.Text;
+            var normalized = text.ToLower()
+                .Replace(" ", "-")
+                .Replace("_", "-");
+
+            // Remove any characters that aren't alphanumeric or hyphen
+            normalized = Regex.Replace(normalized, @"[^a-z0-9\-]", "");
+
+            // Remove consecutive hyphens
+            normalized = Regex.Replace(normalized, @"-+", "-");
+
+            // Remove leading/trailing hyphens
+            normalized = normalized.Trim('-');
+
+            if (normalized != text)
+            {
+                var cursorPos = IdTextBox.CaretIndex;
+                IdTextBox.Text = normalized;
+                IdTextBox.CaretIndex = Math.Min(cursorPos, normalized.Length);
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(DownloadUrlTextBox.Text))
+        private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Vui lòng nhập link download.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(NameTextBox.Text))
+            {
+                MessageBox.Show("Vui lòng nhập tên ứng dụng.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        if (!DownloadUrlTextBox.Text.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            MessageBox.Show("Link download phải dùng HTTPS.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            if (string.IsNullOrWhiteSpace(IdTextBox.Text))
+            {
+                MessageBox.Show("Vui lòng nhập ID ứng dụng.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        // Validate ID format
-        var id = IdTextBox.Text.ToLower().Trim();
-        if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-z0-9-]+$"))
-        {
-            MessageBox.Show("ID chỉ được chứa chữ thường, số và dấu gạch ngang.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            // Validate ID format
+            if (!Regex.IsMatch(IdTextBox.Text, @"^[a-z0-9\-]+$"))
+            {
+                MessageBox.Show("ID chỉ được chứa chữ thường, số và dấu gạch ngang.", "Lỗi định dạng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        // Generate YAML
-        var yaml = GenerateYaml();
+            if (string.IsNullOrWhiteSpace(DownloadUrlTextBox.Text))
+            {
+                MessageBox.Show("Vui lòng nhập link download.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        // Save to apps/ directory
-        try
-        {
+            // Validate HTTPS
+            if (!DownloadUrlTextBox.Text.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Link download phải bắt đầu bằng https://", "Lỗi định dạng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validate detection (at least one method)
+            if (string.IsNullOrWhiteSpace(RegistryKeyTextBox.Text) && string.IsNullOrWhiteSpace(FilePathTextBox.Text))
+            {
+                MessageBox.Show("Vui lòng nhập ít nhất một phương thức phát hiện (Registry hoặc File).", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Check if ID already exists
             var appsDir = Path.Combine(Directory.GetCurrentDirectory(), "apps");
-            Directory.CreateDirectory(appsDir);
-
-            var fileName = $"{id}.yaml";
-            var filePath = Path.Combine(appsDir, fileName);
+            var filePath = Path.Combine(appsDir, $"{IdTextBox.Text.Trim()}.yaml");
 
             if (File.Exists(filePath))
             {
-                var result = MessageBox.Show($"File {fileName} đã tồn tại. Ghi đè?", "Xác nhận",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result != MessageBoxResult.Yes)
-                    return;
+                MessageBox.Show($"App với ID '{IdTextBox.Text.Trim()}' đã tồn tại.\nVui lòng chọn ID khác.", "ID trùng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
 
-            File.WriteAllText(filePath, yaml, Encoding.UTF8);
+            try
+            {
+                // Create manifest object
+                var manifest = new AppManifest
+                {
+                    Name = NameTextBox.Text.Trim(),
+                    Id = IdTextBox.Text.Trim(),
+                    Homepage = HomepageTextBox.Text.Trim(),
+                    Download = new DownloadConfig
+                    {
+                        Url = DownloadUrlTextBox.Text.Trim()
+                    },
+                    Install = new InstallConfig
+                    {
+                        Type = ((ComboBoxItem)InstallTypeComboBox.SelectedItem).Content.ToString(),
+                        SilentArgs = SilentArgsTextBox.Text.Trim()
+                    },
+                    Detection = new DetectionConfig(),
+                    Metadata = new MetadataConfig
+                    {
+                        Description = DescriptionTextBox.Text.Trim(),
+                        Publisher = PublisherTextBox.Text.Trim(),
+                        Category = ((ComboBoxItem)CategoryComboBox.SelectedItem).Content.ToString()
+                    }
+                };
 
-            MessageBox.Show($"Đã lưu: {fileName}\n\nClick 'Làm mới' để load ứng dụng mới.", "Thành công",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+                // Detection
+                if (!string.IsNullOrWhiteSpace(RegistryKeyTextBox.Text))
+                {
+                    manifest.Detection.Registry = new System.Collections.Generic.List<RegistryDetection>
+                    {
+                        new RegistryDetection { Path = RegistryKeyTextBox.Text.Trim() }
+                    };
+                }
 
-            DialogResult = true;
+                if (!string.IsNullOrWhiteSpace(FilePathTextBox.Text))
+                {
+                    manifest.Detection.File = new System.Collections.Generic.List<FileDetection>
+                    {
+                        new FileDetection { Path = FilePathTextBox.Text.Trim() }
+                    };
+                }
+
+                // Ensure apps directory exists
+                Directory.CreateDirectory(appsDir);
+
+                // Save to YAML file
+                var serializer = new SerializerBuilder()
+                    .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                    .Build();
+
+                var yaml = serializer.Serialize(manifest);
+                File.WriteAllText(filePath, yaml);
+
+                MessageBox.Show($"Đã thêm app '{manifest.Name}' thành công!\nFile: {filePath}", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                DialogResult = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tạo app: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
             Close();
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Lỗi khi lưu file:\n{ex.Message}", "Lỗi",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private string GenerateYaml()
-    {
-        var sb = new StringBuilder();
-
-        // Basic info
-        sb.AppendLine($"name: {NameTextBox.Text.Trim()}");
-        sb.AppendLine($"id: {IdTextBox.Text.ToLower().Trim()}");
-        sb.AppendLine($"homepage: {HomepageTextBox.Text.Trim()}");
-        sb.AppendLine();
-
-        // Download
-        sb.AppendLine("download:");
-        sb.AppendLine($"  url: {DownloadUrlTextBox.Text.Trim()}");
-        sb.AppendLine("  checksum: \"\"");
-        sb.AppendLine("  mirrors: []");
-        sb.AppendLine();
-
-        // Install
-        sb.AppendLine("install:");
-        var installType = ((ComboBoxItem)InstallTypeComboBox.SelectedItem)?.Content?.ToString()?.ToLower() ?? "exe";
-        sb.AppendLine($"  type: {installType}");
-        sb.AppendLine($"  silent_args: {SilentArgsTextBox.Text.Trim()}");
-        sb.AppendLine("  pre_install:");
-        sb.AppendLine("    kill_processes: []");
-        sb.AppendLine("  post_install:");
-        sb.AppendLine("    create_shortcuts: []");
-        sb.AppendLine();
-
-        // Detection
-        sb.AppendLine("detection:");
-        var hasRegistry = !string.IsNullOrWhiteSpace(RegistryKeyTextBox.Text);
-        var hasFile = !string.IsNullOrWhiteSpace(FilePathTextBox.Text);
-
-        if (hasRegistry && hasFile)
-            sb.AppendLine("  method: both");
-        else if (hasRegistry)
-            sb.AppendLine("  method: registry");
-        else if (hasFile)
-            sb.AppendLine("  method: file");
-        else
-            sb.AppendLine("  method: registry");
-
-        if (hasRegistry)
-        {
-            sb.AppendLine("  registry:");
-            // Escape backslashes for YAML
-            var regKey = RegistryKeyTextBox.Text.Trim().Replace("\\", "\\\\");
-            sb.AppendLine($"    - path: {regKey}");
-            sb.AppendLine("      value: \"\"");
-        }
-
-        if (hasFile)
-        {
-            sb.AppendLine("  file:");
-            sb.AppendLine($"    - path: {FilePathTextBox.Text.Trim()}");
-        }
-
-        sb.AppendLine();
-
-        // Metadata
-        sb.AppendLine("metadata:");
-        if (!string.IsNullOrWhiteSpace(DescriptionTextBox.Text))
-            sb.AppendLine($"  description: {DescriptionTextBox.Text.Trim()}");
-        if (!string.IsNullOrWhiteSpace(PublisherTextBox.Text))
-            sb.AppendLine($"  publisher: {PublisherTextBox.Text.Trim()}");
-        var category = ((ComboBoxItem)CategoryComboBox.SelectedItem)?.Content?.ToString() ?? "Utility";
-        sb.AppendLine($"  category: {category}");
-        sb.AppendLine("  license: Freeware");
-        sb.AppendLine("  tags: []");
-
-        return sb.ToString();
-    }
-
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
-        Close();
     }
 }

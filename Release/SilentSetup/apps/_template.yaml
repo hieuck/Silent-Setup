@@ -1,0 +1,26 @@
+name: Your App Name
+id: your-app-id
+homepage: https://example.com/
+
+download:
+  url: https://example.com/download/installer.exe
+  # checksum: sha256-hash-here (optional but recommended)
+
+install:
+  type: exe  # exe | msi | zip
+  silent_args: /S  # Adjust based on installer type
+  install_dir: "%ProgramFiles%\\YourApp"
+
+detection:
+  method: registry  # registry | file | both
+  registry:
+    - path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\YourApp"
+      value: DisplayVersion
+
+metadata:
+  category: Utility
+  publisher: Company Name
+  license: Freeware
+  description: Short description of what the app does
+  maintainer: Your Name
+  last_updated: 2026-09-01

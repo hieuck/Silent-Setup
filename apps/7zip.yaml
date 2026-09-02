@@ -4,33 +4,25 @@ homepage: https://www.7-zip.org/
 
 download:
   url: https://www.7-zip.org/a/7z2408-x64.exe
-  checksum: ""
-  mirrors: []
 
 install:
   type: exe
   silent_args: /S
-  pre_install:
-    kill_processes:
-      - 7zFM.exe
-      - 7zG.exe
-  post_install:
-    create_shortcuts: []
+  timeout: 180
 
 detection:
   method: both
   registry:
     - path: HKLM\SOFTWARE\7-Zip
-      value: Path
   file:
-    - path: C:\Program Files\7-Zip\7z.exe
+    - path: C:\Program Files\7-Zip\7zFM.exe
 
 metadata:
-  description: High compression ratio file archiver
-  publisher: Igor Pavlov
   category: Utility
+  publisher: Igor Pavlov
   license: LGPL
+  description: Phần mềm nén và giải nén file miễn phí với tỷ lệ nén cao
   tags:
     - compression
     - archiver
-    - utility
+    - zip

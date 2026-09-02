@@ -22,8 +22,8 @@
                 <TextBlock Text="Tên hiển thị:"/>
                 <TextBox x:Name="NameTextBox" Margin="0,5,0,15"/>
 
-                <TextBlock Text="ID (chữ thường, dùng dấu gạch ngang):"/>
-                <TextBox x:Name="IdTextBox" Margin="0,5,0,15"/>
+                <TextBlock Text="ID (không dấu, chữ thường, dấu - thay khoảng trắng):"/>
+                <TextBox x:Name="IdTextBox" Margin="0,5,0,15" TextChanged="IdTextBox_TextChanged"/>
 
                 <TextBlock Text="Website chính thức:"/>
                 <TextBox x:Name="HomepageTextBox" Margin="0,5,0,15"/>
@@ -39,18 +39,18 @@
 
                 <TextBlock Text="Loại installer:"/>
                 <ComboBox x:Name="InstallTypeComboBox" Margin="0,5,0,15" SelectedIndex="0">
-                    <ComboBoxItem Content="EXE"/>
-                    <ComboBoxItem Content="MSI"/>
-                    <ComboBoxItem Content="ZIP"/>
+                    <ComboBoxItem Content="exe"/>
+                    <ComboBoxItem Content="msi"/>
+                    <ComboBoxItem Content="zip"/>
                 </ComboBox>
 
                 <TextBlock Text="Tham số silent install:"/>
-                <TextBox x:Name="SilentArgsTextBox" Text="/S" Margin="0,5,0,15"/>
+                <TextBox x:Name="SilentArgsTextBox" Margin="0,5,0,15"/>
 
                 <!-- Detection -->
                 <TextBlock Text="Phát hiện app đã cài" FontWeight="Bold" Margin="0,10,0,10"/>
 
-                <TextBlock Text="Registry key (VD: HKLM\SOFTWARE\AppName):"/>
+                <TextBlock Text="Registry key (VD: HKLM\\SOFTWARE\\AppName):"/>
                 <TextBox x:Name="RegistryKeyTextBox" Margin="0,5,0,10"/>
 
                 <TextBlock Text="Hoặc đường dẫn file .exe:"/>
@@ -66,7 +66,7 @@
                 <TextBox x:Name="PublisherTextBox" Margin="0,5,0,10"/>
 
                 <TextBlock Text="Danh mục:"/>
-                <ComboBox x:Name="CategoryComboBox" Margin="0,5,0,15" SelectedIndex="0">
+                <ComboBox x:Name="CategoryComboBox" Margin="0,5,0,15" SelectedIndex="3">
                     <ComboBoxItem Content="Browser"/>
                     <ComboBoxItem Content="Development"/>
                     <ComboBoxItem Content="Media"/>
@@ -77,7 +77,7 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="Lưu" Width="100" Height="35" Margin="0,0,10,0" Click="SaveButton_Click" IsDefault="True"/>
+            <Button Content="Thêm" Width="100" Height="35" Margin="0,0,10,0" Click="AddButton_Click" IsDefault="True"/>
             <Button Content="Hủy" Width="100" Height="35" Click="CancelButton_Click" IsCancel="True"/>
         </StackPanel>
     </Grid>

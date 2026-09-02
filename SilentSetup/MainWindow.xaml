@@ -43,34 +43,58 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Search Box -->
-                <TextBox x:Name="SearchTextBox" Grid.Column="0" Height="30"
-                         VerticalContentAlignment="Center"
-                         TextChanged="SearchTextBox_TextChanged">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Text" Value=""/>
-                            <Style.Triggers>
-                                <Trigger Property="Text" Value="">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <VisualBrush Stretch="None" AlignmentX="Left">
-                                                <VisualBrush.Visual>
-                                                    <TextBlock Text="Tìm kiếm app..." Foreground="Gray" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                                                </VisualBrush.Visual>
-                                            </VisualBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
+                <!-- Search Box with Clear Button -->
+                <Grid Grid.Column="0">
+                    <TextBox x:Name="SearchTextBox" Height="30"
+                             VerticalContentAlignment="Center"
+                             Padding="5,0,30,0"
+                             TextChanged="SearchTextBox_TextChanged">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Text" Value=""/>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <VisualBrush Stretch="None" AlignmentX="Left">
+                                                    <VisualBrush.Visual>
+                                                        <TextBlock Text="Tìm kiếm app..." Foreground="Gray" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <Button x:Name="ClearSearchButton" Content="✕"
+                            Width="25" Height="25"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,3,0"
+                            Click="ClearSearchButton_Click"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            ToolTip="Xóa tìm kiếm">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=SearchTextBox, Path=Text}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
 
                 <!-- Category Filter -->
-                <ComboBox x:Name="CategoryFilterComboBox" Grid.Column="1" Width="120" Height="30" Margin="10,0,0,0"
+                <ComboBox x:Name="CategoryFilterComboBox" Grid.Column="1" Width="150" Height="30" Margin="10,0,0,0"
                           SelectionChanged="CategoryFilterComboBox_SelectionChanged">
                     <ComboBoxItem Content="Tất cả" IsSelected="True"/>
                     <ComboBoxItem Content="Browser"/>
@@ -100,16 +124,33 @@
 
         <!-- Action Buttons -->
         <Border Grid.Row="3" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="10" Background="#ECF0F1">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="Select All" Width="100" Height="35" Margin="5" Click="SelectAllButton_Click"/>
-                <Button Content="Deselect All" Width="100" Height="35" Margin="5" Click="DeselectAllButton_Click"/>
-                <Button x:Name="InstallButton" Content="Install Selected" Width="120" Height="35" Margin="5"
-                        Click="InstallButton_Click" FontWeight="Bold" Background="#27AE60" Foreground="White"/>
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="Chọn tất cả" Width="110" Height="35" Margin="0,0,5,0" Click="SelectAllButton_Click"/>
+                    <Button Content="Bỏ chọn" Width="110" Height="35" Margin="0,0,5,0" Click="DeselectAllButton_Click"/>
+                </StackPanel>
+
+                <!-- Right buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="AddAppButton" Content="Thêm App" Width="110" Height="35"
+                            Click="AddAppButton_Click" Background="#3498DB" Foreground="White" Margin="0,0,5,0"/>
+                    <Button x:Name="SettingsButton" Content="Cài đặt" Width="110" Height="35"
+                            Click="SettingsButton_Click" Background="#95A5A6" Foreground="White" Margin="0,0,5,0"/>
+                    <Button x:Name="InstallButton" Content="Cài đặt đã chọn" Width="140" Height="35"
+                            Click="InstallButton_Click" FontWeight="Bold" Background="#27AE60" Foreground="White"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Progress Bar -->
-        <Border Grid.Row="3" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="10">
+        <Border Grid.Row="4" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0" Padding="10">
             <StackPanel>
                 <TextBlock x:Name="StatusText" Text="Ready" FontSize="12" Foreground="#7F8C8D" Margin="0,0,0,5"/>
                 <ProgressBar x:Name="ProgressBar" Height="20" Minimum="0" Maximum="100" Value="0"/>
