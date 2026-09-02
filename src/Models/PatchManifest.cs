@@ -49,9 +49,9 @@ namespace SilentSetup.Models
     public class ExecuteConfig
     {
         public string File { get; set; } = string.Empty;
-        public List<string>? Args { get; set; }
+        public List<string>? ExecArgs { get; set; }
         public string? WorkingDir { get; set; }
-        public bool RunAsAdmin { get; set; }
+        public bool RequiresAdmin { get; set; }
         public int Timeout { get; set; } = 300;
     }
 
@@ -68,7 +68,7 @@ namespace SilentSetup.Models
     public class ArchiveConfig
     {
         public string File { get; set; } = string.Empty;
-        public string ExtractTo { get; set; } = string.Empty;
+        public string ExtractDir { get; set; } = string.Empty;
         public bool Overwrite { get; set; } = true;
         public string? Password { get; set; }
         public List<string>? Include { get; set; }

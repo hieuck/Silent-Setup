@@ -169,8 +169,8 @@ namespace SilentSetup.Services
                     ? patch.FilesDirectory
                     : ResolvePath(patch.Execute.WorkingDir, appDir, patch.PatchDirectory);
 
-                var args = patch.Execute.Args != null
-                    ? string.Join(" ", patch.Execute.Args.Select(a => ResolvePath(a, appDir, patch.PatchDirectory)))
+                var args = patch.Execute.ExecArgs != null
+                    ? string.Join(" ", patch.Execute.ExecArgs.Select(a => ResolvePath(a, appDir, patch.PatchDirectory)))
                     : string.Empty;
 
                 var startInfo = new ProcessStartInfo
@@ -184,7 +184,7 @@ namespace SilentSetup.Services
                     RedirectStandardError = true
                 };
 
-                if (patch.Execute.RunAsAdmin)
+                if (patch.Execute.RequiresAdmin)
                 {
                     startInfo.Verb = "runas";
                     startInfo.UseShellExecute = true;
@@ -342,7 +342,7 @@ namespace SilentSetup.Services
                     };
                 }
 
-                var extractTo = ResolvePath(patch.Archive.ExtractTo, appDir, patch.PatchDirectory);
+                var extractTo = ResolvePath(patch.Archive.ExtractDir, appDir, patch.PatchDirectory);
                 Directory.CreateDirectory(extractTo);
 
                 _logger.Info($"Extracting archive to: {extractTo}");

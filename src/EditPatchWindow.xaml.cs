@@ -42,7 +42,7 @@ namespace SilentSetup
                 case "executable":
                     PatchTypeComboBox.SelectedIndex = 1;
                     ExeFileTextBox.Text = _patch.Execute?.File ?? "";
-                    ExeArgsTextBox.Text = _patch.Execute?.Args?.FirstOrDefault() ?? "";
+                    ExeArgsTextBox.Text = _patch.Execute?.ExecArgs?.FirstOrDefault() ?? "";
                     break;
                 case "registry":
                     PatchTypeComboBox.SelectedIndex = 2;
@@ -61,7 +61,7 @@ namespace SilentSetup
                     if (_patch.Archive != null)
                     {
                         ArchiveFileTextBox.Text = _patch.Archive.File ?? "";
-                        ExtractDestTextBox.Text = _patch.Archive.ExtractTo ?? "{app_dir}";
+                        ExtractDestTextBox.Text = _patch.Archive.ExtractDir ?? "{app_dir}";
                         ArchivePasswordTextBox.Text = _patch.Archive.Password ?? "";
                     }
                     break;
@@ -150,7 +150,7 @@ namespace SilentSetup
                         _patch.Execute = new ExecuteConfig
                         {
                             File = ExeFileTextBox.Text.Trim(),
-                            Args = new System.Collections.Generic.List<string> { ExeArgsTextBox.Text.Trim() }
+                            ExecArgs = new System.Collections.Generic.List<string> { ExeArgsTextBox.Text.Trim() }
                         };
                         break;
 
@@ -173,7 +173,7 @@ namespace SilentSetup
                         _patch.Archive = new ArchiveConfig
                         {
                             File = ArchiveFileTextBox.Text.Trim(),
-                            ExtractTo = ExtractDestTextBox.Text.Trim(),
+                            ExtractDir = ExtractDestTextBox.Text.Trim(),
                             Password = string.IsNullOrEmpty(ArchivePasswordTextBox.Text.Trim()) ? null : ArchivePasswordTextBox.Text.Trim()
                         };
                         break;

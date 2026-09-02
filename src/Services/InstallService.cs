@@ -92,7 +92,7 @@ namespace SilentSetup.Services
                     RedirectStandardError = true
                 };
 
-                if (app.Install.RequireAdmin)
+                if (app.Install.RequiresAdmin)
                 {
                     startInfo.Verb = "runas";
                     startInfo.UseShellExecute = true;

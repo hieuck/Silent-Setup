@@ -41,7 +41,7 @@ namespace SilentSetup.Models
         public string SilentArgs { get; set; } = string.Empty;
         public string? InstallDir { get; set; }
         public int Timeout { get; set; } = 600;
-        public bool RequireAdmin { get; set; } = true;
+        public bool RequiresAdmin { get; set; } = true;
         public string? Password { get; set; } // For zip extraction or installer password
     }
 
