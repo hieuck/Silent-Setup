@@ -66,7 +66,7 @@ compatibility:
 
 # === PATCH TYPE ===
 
-# Type: copy-files | executable | registry | archive
+# Type: copy-files | executable | registry | archive | download-extract
 type: copy-files
 
 # === FILE OPERATIONS (for type: copy-files) ===
@@ -85,11 +85,11 @@ files:
 
 # execute:
 #   file: patcher.exe                 # File in patches/xxx/files/
-#   args:                             # Command-line arguments
+#   exec_args:                             # Command-line arguments
 #     - --target
 #     - "{app_dir}"
 #   working_dir: "{app_dir}"          # Working directory
-#   run_as_admin: true                # Require admin (default: false)
+#   requires_admin: true                # Require admin (default: false)
 #   timeout: 300                      # Timeout in seconds
 
 # === REGISTRY (for type: registry) ===
@@ -111,7 +111,7 @@ files:
 
 # archive:
 #   file: plugin.zip                  # ZIP file in patches/xxx/files/
-#   extract_to: "{app_dir}/plugins/"  # Extract destination
+#   extract_dir: "{app_dir}/plugins/"  # Extract destination
 #   overwrite: true
 
 # === VERIFICATION (OPTIONAL) ===
@@ -210,12 +210,12 @@ type: executable
 
 execute:
   file: patcher.exe
-  args:
+  exec_args:
     - --silent
     - --target
     - "{app_dir}"
   working_dir: "{temp}"
-  run_as_admin: true
+  requires_admin: true
   timeout: 300
 
 security:
@@ -271,7 +271,7 @@ type: archive
 
 archive:
   file: plugin-pack.zip
-  extract_to: "{app_dir}/plugins/"
+  extract_dir: "{app_dir}/plugins/"
   overwrite: true
   
   # Optional: specific files to extract
@@ -283,6 +283,47 @@ archive:
   exclude:
     - "readme.txt"
 ```
+
+### 5. Download & Extract
+
+Download a ZIP file from URL and extract specific files to target directory.
+
+**Use cases:** Plugins from GitHub releases, remote asset packs, auto-updating patches
+
+```yaml
+type: download-extract
+
+download:
+  url: https://github.com/user/plugin/releases/latest/download/plugin.zip
+  checksum: sha256-hash-here  # Optional but recommended
+
+files:
+  - name: plugin.dll
+    destination: "{app_dir}/plugins/PluginName/plugin.dll"
+    backup: true
+    overwrite: true
+  
+  - name: config.json
+    destination: "{app_dir}/plugins/PluginName/config.json"
+
+metadata:
+  description: Automatically downloads latest version from GitHub
+  source_url: https://github.com/user/plugin
+
+security:
+  risk_level: medium
+  warning: "Downloads from external URL. Verify source before applying."
+```
+
+**Benefits:**
+- No need to commit large binary files to repo
+- Always gets latest version from official source
+- Reduces repo size significantly
+
+**Notes:**
+- Downloads to temp directory, extracts needed files, then cleans up
+- Only specified files are copied to destination
+- Checksum validation recommended for security
 
 ## Placeholders
 
@@ -378,7 +419,7 @@ type: archive
 
 archive:
   file: prettier-3.2.5.vsix
-  extract_to: "{app_data}/extensions/"
+  extract_dir: "{app_data}/extensions/"
 
 compatibility:
   app_versions: ["1.85.*", "1.86.*"]
@@ -403,9 +444,9 @@ type: executable
 
 execute:
   file: patch.exe
-  args: ["--silent"]
+  exec_args: ["--silent"]
   working_dir: "{app_dir}"
-  run_as_admin: true
+  requires_admin: true
 
 metadata:
   category: Crack

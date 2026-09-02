@@ -78,7 +78,7 @@ install:
   timeout: 600
   
   # Require admin privileges
-  require_admin: true
+  requires_admin: true
 
 # === DETECTION CONFIGURATION ===
 
@@ -201,7 +201,7 @@ advanced:
 | `silent_args` | string | - | Silent install arguments |
 | `install_dir` | string | - | Expected install directory |
 | `timeout` | number | 600 | Install timeout in seconds |
-| `require_admin` | boolean | true | Require admin privileges |
+| `requires_admin` | boolean | true | Require admin privileges |
 
 ### Detection Fields
 
