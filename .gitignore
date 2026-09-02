@@ -4,6 +4,8 @@ obj/
 *.exe
 *.dll
 *.pdb
+Release/
+publish/
 
 # User data
 cache/
